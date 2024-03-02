@@ -1,19 +1,19 @@
-function getMovementDirection(key) {
-    if (key == null) return null
+import { Direction } from "./direction.js"
+import { MovementLock } from "./lock.js"
+import { Gate } from "./gate.js"
 
-    let deltas = [0, 0];
+let moveLock = new MovementLock()
+var xyDisplay = document.getElementById("xyDisplay")
 
-    if (key == "w") {
-        deltas[1] = -1
-    } else if (key == "s") {
-        deltas[1] = 1
-    } else if (key == "a") {
-        deltas[0] = -1
-    } else if (key == 'd') {
-        deltas[0] = 1
+function move(player, world, timestamp, key) {
+    let deltas = Direction.toDeltas(key)
+    
+    if (deltas != null && moveLock.isUnlocked(timestamp)) {
+        Gate.movePlayer(player, world, deltas)
+        moveLock.lock(timestamp)
     }
 
-    return deltas
+    xyDisplay.textContent = `(${player.x},${player.y})`
 }
 
-export { getMovementDirection }
+export { move }

@@ -22,7 +22,7 @@ function addInputDetection() {
 }
 
 function keyisValid(key) {
-    return key == "w" || key == "a" || key == "s" || key == "d"
+    return key == "w" || key == "a" || key == "s" || key == "d" || key == 'o' || key =='k' || key == ' '
 }
 
 export { addInputDetection, activeKey}

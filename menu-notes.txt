@@ -1,0 +1,23 @@
+start screen
+	continue cached game
+	load saved game
+	goto game
+
+>>>
+
+game
+	game menu
+		goto pokemon
+			pokemon
+				pokemon details
+					info
+					attacks
+				item give/holds/take
+					give: opens bag
+					holds: lists item
+					take: puts into bag
+		goto bag
+			bag
+		save
+			don't interrupt screen
+		
