@@ -31,6 +31,6 @@ export class MovementLock extends Lock {
 
 export class MenuLock extends Lock {
     lock(startTime) {
-        super.lock(startTime, 250)
+        super.lock(startTime, 150)
     }
 }

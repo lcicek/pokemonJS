@@ -5,6 +5,7 @@ import { MenuLock } from "./lock.js";
 export class MenuNavigator {    
     constructor() {
         this.menuDisplay = document.getElementById("menuDisplay")
+        this.subMenuDisplay = document.getElementById("subMenuDisplay")
 
         // this.startMenu = new StartMenu()
         this.gameMenu = new GameMenu()
@@ -41,15 +42,18 @@ export class MenuNavigator {
         else if (input === Action.B) this.closeMenu()
         else if (input === Action.A) this.nextMenu()
         // TODO: handle case where non-valid input (e.g. for PDMenu that would include Action.A) locks lock
-
-        console.log(this.getActive().index) // TODO: fix short keyboard presses not being detected appropriately
+    
         if (this.isActive()) this.menuLock.lock(timestamp)
     }
 
     setDisplay() {
-        let str = ""
-        if (this.isActive()) str = ` ${this.getActive().constructor.name}`
-        this.menuDisplay.textContent = str
+        if (this.isActive()) {
+            this.menuDisplay.textContent = ` ${this.getActive().constructor.name}`
+            this.subMenuDisplay.textContent = this.getActive().getSelected()
+        } else {
+            this.menuDisplay.textContent = "-"
+            this.subMenuDisplay.textContent = "-"
+        }
     }
 
     activate() {
