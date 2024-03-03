@@ -12,7 +12,7 @@ export class StateManager {
     }
 
     setGameState() {
-        this.state = State.Game
+        if (!this.inGameState()) this.state = State.Game
     }
 
     getActiveState() {
