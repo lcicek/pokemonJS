@@ -7,27 +7,32 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <br>
-    <div>
-        <h3>Stats:</h3>
-        <span>FPS: </span>
-        <span id="fpsDisplay"></span>
-        <br>
-        <span>Player: </span>
-        <span id="xyDisplay"></span>
-        <br>
-        <span>Menu:</span>
-        <span id="menuDisplay"></span>
-        <br>
-        <span>> Selected: </span>
-        <span id="subMenuDisplay"></span>
-        <br>
-        <span>Keyboard press: </span>
-        <span id="inputDisplay"></span>
+    <div style="display: flex; column-gap: 1em;">
+        <canvas id="canvas" style="float: left"></canvas>
+        <div>
+            <br>
+            <h3>Stats:</h3>
+            <span>FPS: </span>
+            <span id="fpsDisplay"></span>
+            <br>
+            <span>Player: </span>
+            <span id="xyDisplay"></span>
+            <br>
+            <span>Menu:</span>
+            <span id="menuDisplay"></span>
+            <br>
+            <span>> Selected: </span>
+            <span id="subMenuDisplay"></span>
+            <br>
+            <span>Keyboard press: </span>
+            <span id="inputDisplay"></span>
 
+        </div>
     </div>
+    <h2>Map Maker:</h2>
+    <canvas id="mapmakerCanvas"></canvas>
 </body>
 
 <script src="main.js" type="module"></script>
+<script src="mapmaker.js" type="module"></script>
 </html>

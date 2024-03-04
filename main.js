@@ -1,11 +1,11 @@
-import { render } from "./modules/renderer.js";
+import { render } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey } from "./modules/inputDetection.js";
-import { enforceFps } from "./modules/fpsHandler.js";
-import { Player } from "./modules/player.js";
-import { World } from "./modules/world.js";
-import { move } from "./modules/movementHandler.js";
-import { MenuNavigator } from "./modules/navigator.js";
-import { StateManager } from "./modules/stateManager.js";
+import { enforceFps } from "./modules/time/fpsHandler.js";
+import { Player } from "./modules/logic/player.js";
+import { World } from "./modules/logic/world.js";
+import { move } from "./modules/logic/movementHandler.js";
+import { MenuNavigator } from "./modules/logic/navigator.js";
+import { StateManager } from "./modules/logic/stateManager.js";
 
 let world = new World(13, 9)
 let player = new Player(0, 0)

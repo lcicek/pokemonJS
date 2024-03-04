@@ -1,5 +1,5 @@
 import { Direction } from "./direction.js"
-import { MovementLock } from "./lock.js"
+import { MovementLock } from "../time/lock.js"
 import { Gate } from "./gate.js"
 
 let moveLock = new MovementLock()

@@ -1,6 +1,4 @@
 import { State } from "./state.js";
-import { Action } from "./constants/action.js";
-import { BagMenu, PokemonMenu } from "./menu.js";
 
 export class StateManager {
     constructor() {

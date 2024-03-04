@@ -1,7 +1,7 @@
 import { GameMenu, BagMenu, SaveMenu, PokemonMenu, PokemonDetailsMenu } from "./menu.js"
 import { Direction } from "./direction.js"
-import { Action } from "./constants/action.js"
-import { MenuLock } from "./lock.js"
+import { Action } from "../constants/action.js"
+import { MenuLock } from "../time/lock.js"
 
 // const startMenu = new StartMenu()
 const gameMenu = new GameMenu()

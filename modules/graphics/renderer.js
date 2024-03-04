@@ -1,5 +1,5 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT } from "./constants/graphicConstants.js";
-import { image } from "./loaders/resourceLoader.js";
+import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT } from "../constants/graphicConstants.js";
+import { image } from "../loaders/resourceLoader.js";
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");

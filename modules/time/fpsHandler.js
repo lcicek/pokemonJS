@@ -1,4 +1,4 @@
-import { FPS, timePerFrame } from "./constants/timeConstants.js";
+import { FPS, timePerFrame } from "../constants/timeConstants.js";
 
 let prevTimestamp; // timestamp
 var fpsDisplay = document.getElementById("fpsDisplay")

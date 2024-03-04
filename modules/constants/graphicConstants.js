@@ -1,7 +1,7 @@
 const SIZE = 16
 
 const WIDTH = 43 // X
-const HEIGHT = 29 // Y
+const HEIGHT = 25 // Y
 
 const CANVAS_WIDTH = WIDTH * SIZE
 const CANVAS_HEIGHT = HEIGHT * SIZE
