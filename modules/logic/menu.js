@@ -67,7 +67,7 @@ export class PokemonMenu extends MenuInterface {
 
         if (dir.south(input)) this.index = (this.index + 2) % this.length;
         else if (dir.north(input)) this.index = (this.index - 2 < 0) ? this.index + 4 : this.index - 2; // for 2 by 3
-        else if (dir.west(input) || dir.east(key)) this.index = indexIsEven ? this.index + 1 : this.index - 1;
+        else if (dir.west(input) || dir.east(input)) this.index = indexIsEven ? this.index + 1 : this.index - 1;
     }
 }
 
@@ -90,7 +90,7 @@ export class BagMenu extends ColumnMenuInterface {
 
 export class PokemonDetailsMenu extends MenuInterface {
     constructor() {
-        super([]) // TODO: change
+        super(["pokemon description", "pokemon attacks"])
     }
 
     navigate(input) {

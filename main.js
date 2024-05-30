@@ -6,16 +6,20 @@ import { World } from "./modules/logic/world.js";
 import { move } from "./modules/logic/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/navigator.js";
 import { StateManager } from "./modules/logic/stateManager.js";
+import { Outside } from "./modules/logic/space.js";
 
-let world = new World(13, 9)
-let player = new Player(0, 0)
+let image = new Image()
+image.src = "./assets/map/default-map.png"
+let outside = new Outside()
+// let world = new World(outsideSpace) // TODO: clarify space <-> world relationship
+let player = new Player(8, 8)
 
 let stateManager = new StateManager()
 let menuNavigator;
 
 async function gameLoop(timestamp) {
     processInput(timestamp)
-    render(world, player.x, player.y)
+    render(outside, player.x, player.y, image)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
@@ -41,7 +45,7 @@ function handleMenu(activeKey, timestamp) {
 }
 
 function handleGame(activeKey, timestamp) {
-    if (stateManager.inGameState()) move(player, world, timestamp, activeKey)
+    if (stateManager.inGameState()) move(player, outside, timestamp, activeKey)
 }
 
 window.onload = function() {

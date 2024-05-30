@@ -1,6 +1,7 @@
 export class World {
-    constructor(width, height) {
-        this.width = width
-        this.height = height
+    space;
+
+    constructor(space) {
+        this.space = space;
     }
 }

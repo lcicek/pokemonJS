@@ -5,11 +5,11 @@ import { Gate } from "./gate.js"
 let moveLock = new MovementLock()
 var xyDisplay = document.getElementById("xyDisplay")
 
-function move(player, world, timestamp, key) {
+function move(player, outside, timestamp, key) {
     let deltas = Direction.toDeltas(key)
     
     if (deltas != null && moveLock.isUnlocked(timestamp)) {
-        Gate.movePlayer(player, world, deltas)
+        Gate.movePlayer(player, outside, deltas)
         moveLock.lock(timestamp)
     }
 
