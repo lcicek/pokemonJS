@@ -1,4 +1,4 @@
-import { Direction as dir } from "./direction.js";
+import { Direction as dir } from "../main-game/direction.js";
 
 class MenuInterface {
     items;

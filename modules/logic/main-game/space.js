@@ -1,4 +1,4 @@
-import { SIZE} from "../constants/graphicConstants.js";
+import { SIZE } from "../../constants/graphicConstants.js";
 
 class SpaceInterface {    
     constructor(width, height) {

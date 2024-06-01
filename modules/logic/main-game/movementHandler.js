@@ -1,5 +1,5 @@
 import { Direction } from "./direction.js"
-import { MovementLock } from "../time/lock.js"
+import { MovementLock } from "../../time/lock.js"
 
 let moveLock = new MovementLock()
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")

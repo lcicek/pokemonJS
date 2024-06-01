@@ -1,7 +1,7 @@
 import { GameMenu, BagMenu, SaveMenu, PokemonMenu, PokemonDetailsMenu } from "./menu.js"
-import { Direction } from "./direction.js"
-import { Action } from "../constants/action.js"
-import { MenuLock } from "../time/lock.js"
+import { Direction } from "../main-game/direction.js"
+import { Action } from "../../constants/action.js"
+import { MenuLock } from "../../time/lock.js"
 
 // const startMenu = new StartMenu()
 const gameMenu = new GameMenu()
@@ -9,7 +9,6 @@ const bagMenu = new BagMenu()
 const saveMenu = new SaveMenu()
 const pokemonMenu = new PokemonMenu()
 const pokemonDetailsMenu = new PokemonDetailsMenu()
-
 
 class NavigatorInterface {
     constructor(menus, menuDisplay, subMenuDisplay) {
