@@ -3,7 +3,7 @@ import { addInputDetection, getActiveKey } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/fpsHandler.js";
 import { Player } from "./modules/logic/player.js";
 import { World } from "./modules/logic/world.js";
-import { move } from "./modules/logic/movementHandler.js";
+import { MovementHandler } from "./modules/logic/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/navigator.js";
 import { StateManager } from "./modules/logic/stateManager.js";
 import { Outside } from "./modules/logic/space.js";
@@ -43,7 +43,9 @@ function handleMenu(activeKey, timestamp) {
 }
 
 function handleGame(activeKey, timestamp) {
-    if (stateManager.inGameState()) move(player, outside, timestamp, activeKey)
+    if (stateManager.inGameState()) {
+        MovementHandler.performMovement(player, outside, timestamp, activeKey)
+    }
 }
 
 window.onload = function() {
