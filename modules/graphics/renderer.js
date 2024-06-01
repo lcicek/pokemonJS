@@ -9,7 +9,7 @@ canvas.height = CANVAS_HEIGHT // CANVAS_HEIGHT
 
 function render(px, py) { // player x,y
     context.imageSmoothingEnabled = false
-    let [mapX, mapY] = calculateMapCoordinates(px, py) // TODO: improve performance
+    let [mapX, mapY] = calculateMapCoordinates(px, py)
 
     renderCanvasBackground(context) 
     renderMapBackground(context, mapX, mapY)
@@ -18,7 +18,7 @@ function render(px, py) { // player x,y
 }
 
 function calculateMapCoordinates(px, py) {
-    let mapX = -(px - NORMALIZE_X) * SIZE
+    let mapX = -(px - NORMALIZE_X) * SIZE // TODO: improve performance
     let mapY = -(py - NORMALIZE_Y) * SIZE
 
     return [mapX, mapY]

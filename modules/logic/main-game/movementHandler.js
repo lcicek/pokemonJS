@@ -1,8 +1,11 @@
 import { Direction } from "./direction.js"
 import { MovementLock } from "../../time/lock.js"
+import { PokemonEncounter } from "./pokemonEncounter.js"
 
 let moveLock = new MovementLock()
+
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
+var bushDisplay = document.getElementById("bushDisplay")
 
 // Interface between Player and Outside
 export class MovementHandler { // TODO: decide whether class as a wrapper for static functions makes sense
@@ -28,6 +31,14 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         if (deltas != null && moveLock.isUnlocked(timestamp)) {
             this.movePlayer(player, outside, deltas)
             moveLock.lock(timestamp)
+
+            let playerIsInBush = outside.isBush(player.x, player.y)
+
+            if (playerIsInBush) {
+                PokemonEncounter.checkPokemonEncounter()
+            }
+
+            bushDisplay.textContent = `${playerIsInBush}`
         }
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`
