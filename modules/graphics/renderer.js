@@ -1,5 +1,5 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y } from "../constants/graphicConstants.js";
-import { outsideImage, characterSf } from "../loaders/resourceLoader.js";
+import { outsideImageBG, outsideImageFG, characterSf } from "../loaders/resourceLoader.js";
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
@@ -9,21 +9,32 @@ canvas.height = CANVAS_HEIGHT // CANVAS_HEIGHT
 
 function render(px, py) { // player x,y
     context.imageSmoothingEnabled = false
-    renderBackground(context) 
-    renderOutside(context, px, py)
+    let [mapX, mapY] = calculateMapCoordinates(px, py) // TODO: improve performance
+
+    renderCanvasBackground(context) 
+    renderMapBackground(context, mapX, mapY)
     renderPlayer(context)
+    renderMapForeground(context, mapX, mapY)
 }
 
-function renderBackground(context) {
+function calculateMapCoordinates(px, py) {
+    let mapX = -(px - NORMALIZE_X) * SIZE
+    let mapY = -(py - NORMALIZE_Y) * SIZE
+
+    return [mapX, mapY]
+}
+
+function renderCanvasBackground(context) {
     context.fillStyle = 'black'
     context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 }
 
-function renderOutside(context, px, py) {
-    // normalize position to center
-    let outsideX = -(px - NORMALIZE_X) * SIZE
-    let outsideY = -(py - NORMALIZE_Y) * SIZE
-    context.drawImage(outsideImage, outsideX, outsideY)
+function renderMapBackground(context, x, y) {
+    context.drawImage(outsideImageBG, x, y)
+}
+
+function renderMapForeground(context, x, y) {
+    context.drawImage(outsideImageFG, x, y)
 }
 
 function renderPlayer(context) {
