@@ -18,6 +18,7 @@ async function enforceFps(timestamp) {
     } else {
         let currentFPS = Math.round(1 / elapsed)
         fpsDisplay.textContent = currentFPS
+        //console.log(`Elapsed time:  ${elapsed * 1000}ms. Intended time: 16.67ms. Current FPS: ${currentFPS}.`)
     }
 }
 

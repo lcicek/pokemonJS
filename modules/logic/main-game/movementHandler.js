@@ -1,8 +1,5 @@
 import { Direction } from "./direction.js"
-import { MovementLock } from "../../time/lock.js"
 import { PokemonEncounter } from "./pokemonEncounter.js"
-
-let moveLock = new MovementLock()
 
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
 var bushDisplay = document.getElementById("bushDisplay")
@@ -24,16 +21,15 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
     }
 
     static performMovement(player, outside, timestamp, key) {
-        // get direction of movement:
-        let deltas = Direction.toDeltas(key)
+        let moved = false
+        let deltas = Direction.toDeltas(key) // get direction of movement
         
         // if movement / direction is valid (only w/a/s/d):
-        if (deltas != null && moveLock.isUnlocked(timestamp)) {
+        if (deltas != null) {
             this.movePlayer(player, outside, deltas)
-            moveLock.lock(timestamp)
+            moved = true
 
             let playerIsInBush = outside.isBush(player.x, player.y)
-
             if (playerIsInBush) {
                 PokemonEncounter.checkPokemonEncounter()
             }
@@ -42,5 +38,7 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         }
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`
+
+        return moved
     }
 }

@@ -5,32 +5,34 @@ export class Lock {
         this.endTime = startTime + duration
     }
 
-    isUnlocked(currTime) {
-        if (this.endTime === undefined) return true
-
-        let unlocked = this.endTime <= currTime
-        if (unlocked) this.reset()
-
-        return unlocked
+    isUnlocked() {
+        return this.endTime === undefined
     }
 
-    reset() {
+    tryUnlock(currTime) {
+        let lockElapsed = this.endTime <= currTime
+        if (lockElapsed) this.unlock()
+
+        return lockElapsed
+    }
+
+    unlock() {
         this.endTime = undefined;
     }
     
-    isLocked(currTime) {
-        return !this.isUnlocked(currTime)
+    isLocked() {
+        return !this.isUnlocked()
     }
 }
 
 export class MovementLock extends Lock {
     lock(startTime) {
-        super.lock(startTime, 150) // ms
+        super.lock(startTime, 240) // ms
     }
 }
 
 export class MenuLock extends Lock {
     lock(startTime) {
-        super.lock(startTime, 180)
+        super.lock(startTime, 240)
     }
 }

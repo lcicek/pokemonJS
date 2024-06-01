@@ -7,7 +7,7 @@ const context = canvas.getContext("2d");
 canvas.width = CANVAS_WIDTH //CANVAS_WIDTH
 canvas.height = CANVAS_HEIGHT // CANVAS_HEIGHT
 
-function render(px, py) { // player x,y
+function render(px, py, isFinalMovementFrame) { // player x,y
     context.imageSmoothingEnabled = false
     let [mapX, mapY] = calculateMapCoordinates(px, py)
 
