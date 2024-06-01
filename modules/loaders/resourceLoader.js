@@ -1,5 +1,7 @@
-let image = new Image()
-image.src = "diglet.png"
+let outsideImage = new Image()
+outsideImage.src = "./assets/map/default-map.png"
 
+let characterSf = new Image()
+characterSf.src = "./assets/character-sprites/sf.png"
 
-export {image}
+export { outsideImage, characterSf }
