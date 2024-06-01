@@ -2,14 +2,12 @@ import { render } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/fpsHandler.js";
 import { Player } from "./modules/logic/player.js";
-import { World } from "./modules/logic/world.js";
 import { MovementHandler } from "./modules/logic/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/navigator.js";
 import { StateManager } from "./modules/logic/stateManager.js";
 import { Outside } from "./modules/logic/space.js";
 
 let outside = new Outside()
-// let world = new World(outsideSpace) // TODO: clarify space <-> world relationship
 let player = new Player(8, 8)
 
 let stateManager = new StateManager()
