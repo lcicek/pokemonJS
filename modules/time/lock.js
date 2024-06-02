@@ -1,5 +1,7 @@
+import { timePerMovement, timePerNavigation } from "../constants/timeConstants.js";
+
 export class Lock {
-    endTime;    
+    endTime = undefined;    
 
     lock(startTime, duration) {
         this.endTime = startTime + duration
@@ -27,12 +29,12 @@ export class Lock {
 
 export class MovementLock extends Lock {
     lock(startTime) {
-        super.lock(startTime, 240) // ms
+        super.lock(startTime, timePerMovement)
     }
 }
 
 export class MenuLock extends Lock {
     lock(startTime) {
-        super.lock(startTime, 240)
+        super.lock(startTime, timePerNavigation)
     }
 }

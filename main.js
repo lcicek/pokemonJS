@@ -1,6 +1,6 @@
 import { render } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey } from "./modules/inputDetection.js";
-import { enforceFps } from "./modules/time/fpsHandler.js";
+import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
 import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
@@ -14,19 +14,26 @@ let stateManager = new StateManager()
 let menuNavigator;
 let moveLock = new MovementLock()
 
+let movementBegan = false
 let movementEnded = false
 
 async function gameLoop(timestamp) {
-    if (moveLock.isLocked()) {
+    let acted = moveLock.isUnlocked() ? processInput(timestamp) : false // will perform locking mechanisms
+
+    if (acted && moveLock.isLocked()) { // i.e. the performed action was a movement action
+        movementBegan = true
+        movementEnded = false
+    }  else if (moveLock.isLocked()) { // i.e. a previous action is being carried out
+        movementBegan = false
         movementEnded = moveLock.tryUnlock(timestamp) // movelock unlocked means movement has come to an end
     } else {
-        movementEnded = true
+        movementBegan = false
+        movementEnded = false
     }
 
-    let acted = processInput(timestamp)
 
     // only render if there is a new action, a movement is being carried out or a movement has ended (and needs to be rendered in the final frame):
-    if (acted || moveLock.isLocked() || movementEnded) render(player.x, player.y, movementEnded)
+    if (acted || moveLock.isLocked() || movementBegan) render(player, movementBegan, movementEnded)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
@@ -62,7 +69,7 @@ function handleGame(activeKey, timestamp) {
 
 window.onload = function() {
     addInputDetection()
-    render(player.x, player.y) // initial render
+    render(player, true, true) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)

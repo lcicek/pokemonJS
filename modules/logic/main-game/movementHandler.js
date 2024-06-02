@@ -2,6 +2,7 @@ import { Direction } from "./direction.js"
 import { PokemonEncounter } from "./pokemonEncounter.js"
 
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
+var prevCoordinatesDisplay = document.getElementById("prevCoordinatesDisplay")
 var bushDisplay = document.getElementById("bushDisplay")
 
 // Interface between Player and Outside
@@ -15,6 +16,9 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         }
 
         if (targetX < outside.width && targetY < outside.height && targetX >= 0 && targetY >= 0) {
+            player.prevX = player.x
+            player.prevY = player.y
+
             player.x = targetX
             player.y = targetY
         }
@@ -38,6 +42,7 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         }
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`
+        prevCoordinatesDisplay.textContent = `(${player.prevX},${player.prevY})`
 
         return moved
     }

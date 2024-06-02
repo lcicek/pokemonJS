@@ -1,4 +1,8 @@
 const FPS = 60
-const timePerFrame = 1 / FPS
+const timePerFrame = 1 / FPS // in s
+const timePerFrameMS = timePerFrame * 1000 // in ms
 
-export { FPS, timePerFrame}
+const timePerMovement = 180 // ms
+const timePerNavigation = 240 // ms
+
+export { FPS, timePerFrame, timePerMovement, timePerNavigation, timePerFrameMS }
