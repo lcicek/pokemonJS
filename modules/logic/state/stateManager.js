@@ -1,5 +1,7 @@
 import { State } from "./state.js";
 
+var stateDisplay = document.getElementById("stateDisplay")
+
 export class StateManager {
     constructor() {
         this.setGameState()
@@ -7,14 +9,15 @@ export class StateManager {
 
     setState(state) {
         this.state = state
+        stateDisplay.textContent = `${Object.keys(State)[this.state]}`
     }
 
     setMenuState() {
-        this.state = State.Menu
+        this.setState(State.Menu)
     }
 
     setGameState() {
-        if (!this.isInGameState()) this.state = State.Game
+        this.setState(State.Game)
     }
 
     getActiveState() {
