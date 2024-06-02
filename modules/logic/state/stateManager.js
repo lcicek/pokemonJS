@@ -5,20 +5,32 @@ export class StateManager {
         this.setGameState()
     }
 
+    setState(state) {
+        this.state = state
+    }
+
     setMenuState() {
         this.state = State.Menu
     }
 
     setGameState() {
-        if (!this.inGameState()) this.state = State.Game
+        if (!this.isInGameState()) this.state = State.Game
     }
 
     getActiveState() {
         return this.state
     }
 
-    inGameState() {
-        return this.getActiveState() === State.Game
+    isInGameState() {
+        return this.state == State.Game || this.state == State.AwaitingEncounter
+    }
+
+    isInMenuState() {
+        return this.state == State.Menu
+    }
+
+    isAwaitingEncounter() {
+        return this.state == State.AwaitingEncounter
     }
 
     toString() {

@@ -1,9 +1,7 @@
 import { Direction } from "./direction.js"
-import { PokemonEncounter } from "./pokemonEncounter.js"
 
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
 var prevCoordinatesDisplay = document.getElementById("prevCoordinatesDisplay")
-var bushDisplay = document.getElementById("bushDisplay")
 
 // Interface between Player and Outside
 export class MovementHandler { // TODO: decide whether class as a wrapper for static functions makes sense
@@ -35,16 +33,8 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         let deltas = Direction.toDeltas(key) // get direction of movement
         
         // if movement / direction is valid (only w/a/s/d):
-        if (deltas != null) {
-            moved = this.movePlayer(player, outside, deltas)
-
-            let playerIsInBush = outside.isBush(player.x, player.y)
-            if (playerIsInBush) {
-                PokemonEncounter.checkPokemonEncounter()
-            }
-
-            bushDisplay.textContent = `${playerIsInBush}`
-        }
+        if (deltas != null) moved = this.movePlayer(player, outside, deltas)
+        
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`
         prevCoordinatesDisplay.textContent = `(${player.prevX},${player.prevY})`

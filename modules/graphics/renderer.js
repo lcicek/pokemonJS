@@ -58,12 +58,6 @@ function prepareCoordinates(player) {
 
     targetX = -(player.x - NORMALIZE_X) * SIZE
     targetY = -(player.y - NORMALIZE_Y) * SIZE
-
-    console.log("start:")
-    console.log(startX, startY)
-    console.log("target:")
-    console.log(targetX, targetY)
-    console.log("##############")
 }
 
 function renderCanvasBackground() {
