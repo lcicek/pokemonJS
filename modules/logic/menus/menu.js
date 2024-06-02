@@ -10,6 +10,7 @@ class MenuInterface {
         this.index = items.length > 0 ? 0 : undefined;
     }
 
+    // returns whether navigation took place
     navigate() {}
 
     hasItems() {
@@ -28,8 +29,13 @@ class MenuInterface {
 
 class ColumnMenuInterface extends MenuInterface {
     navigate(input) {
-        if (dir.south(input)) this.index = (this.index + 1) % this.length;
-        if (dir.north(input)) this.index = (this.index - 1) < 0 ? this.length-1 : (this.index - 1);
+        let down = dir.south(input)
+        let up = dir.north(input)
+
+        if (down) this.index = (this.index + 1) % this.length;
+        if (up) this.index = (this.index - 1) < 0 ? this.length-1 : (this.index - 1);
+
+        return down || up
     }
 }
 
@@ -68,6 +74,8 @@ export class PokemonMenu extends MenuInterface {
         if (dir.south(input)) this.index = (this.index + 2) % this.length;
         else if (dir.north(input)) this.index = (this.index - 2 < 0) ? this.index + 4 : this.index - 2; // for 2 by 3
         else if (dir.west(input) || dir.east(input)) this.index = indexIsEven ? this.index + 1 : this.index - 1;
+
+        return true
     }
 }
 
@@ -94,8 +102,13 @@ export class PokemonDetailsMenu extends MenuInterface {
     }
 
     navigate(input) {
-        if (dir.east(input)) this.index = (this.index + 1) % this.length;
-        if (dir.west(input)) this.index = (this.index - 1) < 0 ? this.length-1 : (this.index - 1);
+        let right = dir.east(input)
+        let left = dir.west(input)
+
+        if (right) this.index = (this.index + 1) % this.length;
+        if (left) this.index = (this.index - 1) < 0 ? this.length-1 : (this.index - 1);
+
+        return right || left
     }
 }
 

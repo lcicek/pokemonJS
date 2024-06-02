@@ -6,7 +6,7 @@ import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
 import { StateManager } from "./modules/logic/state/stateManager.js";
 import { Outside } from "./modules/logic/main-game/space.js";
-import { MovementLock } from "./modules/time/lock.js";
+import { MovementLock, MenuLock } from "./modules/time/lock.js";
 import { tryEncounter } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 
@@ -14,24 +14,28 @@ let outside = new Outside()
 let player = new Player(8, 8)
 let stateManager = new StateManager()
 let menuNavigator;
+
 let moveLock = new MovementLock()
+let menuLock = new MenuLock()
 
 async function gameLoop(timestamp) {
-    let acted = moveLock.isUnlocked() ? processInput(timestamp) : false // will perform locking mechanisms
+    let acted = moveLock.isUnlocked() ? processInput() : false // will perform locking mechanisms
 
     handleGameRendering(acted)
+    // console.log(menuLock.isLocked())
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
 
-function processInput(timestamp) {
+function processInput() {
     let activeKey = getActiveKey()
+
+    handleMenu(activeKey)
 
     if (activeKey === null) return false
 
-    handleMenu(activeKey, timestamp)
-    handleGame(activeKey, timestamp)
+    handleGame(activeKey) // TODO: consider changing performMovement to work even with activeKey = null
 
     return true
 }
@@ -52,18 +56,24 @@ function handleGameRendering(acted) {
     }
 }
 
-function handleMenu(activeKey, timestamp) { // TODO: adjust to changed lock
+function handleMenu(activeKey) { // TODO: adjust to changed lock
     if (!stateManager.isInGameState() && !stateManager.isInMenuState()) return // only states where menu can be interacted with
 
+    // case: menu is closed
     if (menuNavigator.isClosed()) {
-        let wasOpened = menuNavigator.tryOpen(activeKey, timestamp)
+        let wasOpened = menuNavigator.tryOpen(activeKey)
         if (wasOpened) stateManager.setMenuState()
-    } else {
-        menuNavigator.update(activeKey, timestamp)
+        
+        return
+    }
 
-        if (menuNavigator.isClosed()) { // i.e. menus was closed with this udpate
-            stateManager.setState(State.Game)
-        }
+    // case: menu is open
+    if (menuLock.isUnlocked()) {
+        let navigated = menuNavigator.update(activeKey) // case: user initiated navigation in menu
+        if (navigated) menuLock.lock()
+        else if (menuNavigator.isClosed()) stateManager.setState(State.Game) // case: user closed menu
+    } else {
+        menuLock.tick() // case: previously initiated navigation is in progress
     }
 }
 

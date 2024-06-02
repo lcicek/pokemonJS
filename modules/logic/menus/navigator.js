@@ -1,7 +1,6 @@
 import { GameMenu, BagMenu, SaveMenu, PokemonMenu, PokemonDetailsMenu } from "./menu.js"
 import { Direction } from "../main-game/direction.js"
 import { Action } from "../../constants/action.js"
-import { MenuLock } from "../../time/lock.js"
 
 // const startMenu = new StartMenu()
 const gameMenu = new GameMenu()
@@ -15,25 +14,24 @@ class NavigatorInterface {
         this.active = -1;
         this.menu = []
         for (let m of menus) this.menu.push(m)
-        this.menuLock = new MenuLock()
 
         this.menuDisplay = document.getElementById(menuDisplay)
         this.subMenuDisplay = document.getElementById(subMenuDisplay)
     }
 
-    update(input, timestamp) {
+    update(input) {
         if (!this.isOpen()) console.error("Navigator.update() was called despite not being active.") // sanity check
 
-        this.setDisplay() // technically, display is set one frame late. it's here nonetheless to set the display inspite of the lock
+        let navigated = false
 
-        if (this.menuLock.isLocked(timestamp)) return
-
-        if (Direction.isDirection(input)) this.getActive().navigate(input)
-        else if (input === Action.B) this.closeMenu()
+        if (Direction.isDirection(input)) {
+            navigated = this.getActive().navigate(input)
+        } else if (input === Action.B) this.closeMenu()
         else if (input === Action.A) this.nextMenu()
-        // TODO: handle case where non-valid input (e.g. for PDMenu that would include Action.A) locks lock
-    
-        if (this.isOpen()) this.menuLock.lock(timestamp)
+
+        this.setDisplay() // technically, display is set one frame late.
+
+        return navigated
     }
 
     setDisplay() {
@@ -70,13 +68,12 @@ export class MenuNavigator extends NavigatorInterface {
         super([gameMenu, bagMenu, saveMenu, pokemonMenu, pokemonDetailsMenu], "menuDisplay", "subMenuDisplay")
     }
 
-    tryOpen(input, timestamp) {
+    tryOpen(input) {
         if (this.isOpen()) return true
 
         let opened = false
         if (input === Action.START) {
             this.activate()
-            this.menuLock.lock(timestamp)
             opened = true
         }
 
