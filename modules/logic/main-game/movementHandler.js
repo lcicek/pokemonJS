@@ -7,12 +7,14 @@ var bushDisplay = document.getElementById("bushDisplay")
 
 // Interface between Player and Outside
 export class MovementHandler { // TODO: decide whether class as a wrapper for static functions makes sense
+    
+    // returns true if movement occured:
     static movePlayer(player, outside, deltas) {
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
 
         if (outside.collides(targetX, targetY)) {
-            return
+            return false
         }
 
         if (targetX < outside.width && targetY < outside.height && targetX >= 0 && targetY >= 0) {
@@ -21,7 +23,11 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
 
             player.x = targetX
             player.y = targetY
+            
+            return true
         }
+
+        return false
     }
 
     static performMovement(player, outside, key) {
@@ -30,8 +36,7 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         
         // if movement / direction is valid (only w/a/s/d):
         if (deltas != null) {
-            this.movePlayer(player, outside, deltas)
-            moved = true
+            moved = this.movePlayer(player, outside, deltas)
 
             let playerIsInBush = outside.isBush(player.x, player.y)
             if (playerIsInBush) {
