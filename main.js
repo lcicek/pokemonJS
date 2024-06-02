@@ -71,7 +71,11 @@ function handleMenu(activeKey) { // TODO: adjust to changed lock
     if (menuLock.isUnlocked()) {
         let navigated = menuNavigator.update(activeKey) // case: user initiated navigation in menu
         if (navigated) menuLock.lock()
-        else if (menuNavigator.isClosed()) stateManager.setState(State.Game) // case: user closed menu
+    
+        if (menuNavigator.isClosed()) { // case: user closed menu
+            stateManager.setState(State.Game)
+            menuLock.unlock()
+        }
     } else {
         menuLock.tick() // case: previously initiated navigation is in progress
     }

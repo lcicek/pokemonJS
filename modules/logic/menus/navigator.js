@@ -22,12 +22,12 @@ class NavigatorInterface {
     update(input) {
         if (!this.isOpen()) console.error("Navigator.update() was called despite not being active.") // sanity check
 
-        let navigated = false
+        let navigated = true
 
-        if (Direction.isDirection(input)) {
-            navigated = this.getActive().navigate(input)
-        } else if (input === Action.B) this.closeMenu()
+        if (Direction.isDirection(input)) navigated = this.getActive().navigate(input)
+        else if (input === Action.B) this.closeMenu()
         else if (input === Action.A) this.nextMenu()
+        else navigated = false
 
         this.setDisplay() // technically, display is set one frame late.
 
