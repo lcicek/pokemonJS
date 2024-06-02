@@ -14,26 +14,18 @@ let stateManager = new StateManager()
 let menuNavigator;
 let moveLock = new MovementLock()
 
-let movementBegan = false
-let movementEnded = false
-
 async function gameLoop(timestamp) {
     let acted = moveLock.isUnlocked() ? processInput(timestamp) : false // will perform locking mechanisms
 
-    if (acted && moveLock.isLocked()) { // i.e. the performed action was a movement action
-        movementBegan = true
-        movementEnded = false
-    }  else if (moveLock.isLocked()) { // i.e. a previous action is being carried out
-        movementBegan = false
-        movementEnded = moveLock.tryUnlock(timestamp) // movelock unlocked means movement has come to an end
-    } else {
-        movementBegan = false
-        movementEnded = false
-    }
-
-
     // only render if there is a new action, a movement is being carried out or a movement has ended (and needs to be rendered in the final frame):
-    if (acted || moveLock.isLocked() || movementBegan) render(player, movementBegan, movementEnded)
+    if (acted || moveLock.isLocked()) {
+        let movementBegins = moveLock.isFirstTick()
+        let movementEnds = moveLock.isLastTick()
+
+        render(player, movementBegins, movementEnds)
+        
+        moveLock.tick()
+    }
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
@@ -50,7 +42,7 @@ function processInput(timestamp) {
     return true
 }
 
-function handleMenu(activeKey, timestamp) {
+function handleMenu(activeKey, timestamp) { // TODO: adjust to changed lock
     if (menuNavigator.isClosed()) {
         let wasOpened = menuNavigator.tryOpen(activeKey, timestamp)
         if (wasOpened) stateManager.setMenuState()
@@ -60,11 +52,11 @@ function handleMenu(activeKey, timestamp) {
     }
 }
 
-function handleGame(activeKey, timestamp) {
-    if (!stateManager.inGameState() || moveLock.isLocked(timestamp)) return
+function handleGame(activeKey) {
+    if (!stateManager.inGameState() || moveLock.isLocked()) return
 
-    let moved = MovementHandler.performMovement(player, outside, timestamp, activeKey)
-    if (moved) moveLock.lock(timestamp)
+    let moved = MovementHandler.performMovement(player, outside, activeKey)
+    if (moved) moveLock.lock()
 }
 
 window.onload = function() {

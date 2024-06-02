@@ -1,40 +1,52 @@
-import { timePerMovement, timePerNavigation } from "../constants/timeConstants.js";
+import { framesPerMovement, framesPerNavigation } from "../constants/timeConstants.js";
 
 export class Lock {
-    endTime = undefined;    
+    currentFrame = 0
+    endFrame = undefined   
 
-    lock(startTime, duration) {
-        this.endTime = startTime + duration
+    lock(duration) {
+        this.endFrame = duration
+        this.currentFrame = 1 // TODO: check if it should be zero or one
     }
 
     isUnlocked() {
-        return this.endTime === undefined
-    }
-
-    tryUnlock(currTime) {
-        let lockElapsed = this.endTime <= currTime
-        if (lockElapsed) this.unlock()
-
-        return lockElapsed
+        return this.endFrame === undefined
     }
 
     unlock() {
-        this.endTime = undefined;
+        this.currentFrame = undefined
+        this.endFrame = undefined;
     }
     
     isLocked() {
         return !this.isUnlocked()
     }
+
+    tick() {
+        if (this.currentFrame !== undefined) this.currentFrame++
+
+        if (this.currentFrame > this.endFrame) {
+            this.unlock()
+        }
+    }
+
+    isFirstTick() {
+        return this.currentFrame == 1
+    }
+
+    isLastTick() {
+        return this.currentFrame == this.endFrame
+    }
 }
 
 export class MovementLock extends Lock {
-    lock(startTime) {
-        super.lock(startTime, timePerMovement)
+    lock() {
+        super.lock(framesPerMovement)
     }
 }
 
 export class MenuLock extends Lock {
-    lock(startTime) {
-        super.lock(startTime, timePerNavigation)
+    lock() {
+        super.lock(framesPerNavigation)
     }
 }

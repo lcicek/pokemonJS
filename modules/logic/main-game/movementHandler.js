@@ -24,7 +24,7 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         }
     }
 
-    static performMovement(player, outside, timestamp, key) {
+    static performMovement(player, outside, key) {
         let moved = false
         let deltas = Direction.toDeltas(key) // get direction of movement
         

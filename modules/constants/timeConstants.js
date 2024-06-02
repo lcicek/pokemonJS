@@ -2,7 +2,9 @@ const FPS = 60
 const timePerFrame = 1 / FPS // in s
 const timePerFrameMS = timePerFrame * 1000 // in ms
 
-const timePerMovement = 180 // ms
-const timePerNavigation = 240 // ms
 
-export { FPS, timePerFrame, timePerMovement, timePerNavigation, timePerFrameMS }
+// ideally, disivible by SIZE (i.e. 32/64/...)
+const framesPerMovement = 16 
+const framesPerNavigation = 16
+
+export { FPS, timePerFrame, framesPerMovement, framesPerNavigation, timePerFrameMS }
