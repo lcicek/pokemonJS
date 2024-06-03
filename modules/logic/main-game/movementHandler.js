@@ -2,6 +2,7 @@ import { Direction } from "./direction.js"
 
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
 var prevCoordinatesDisplay = document.getElementById("prevCoordinatesDisplay")
+var directionDisplay = document.getElementById("directionDisplay")
 
 // Interface between Player and Outside
 export class MovementHandler { // TODO: decide whether class as a wrapper for static functions makes sense
@@ -28,16 +29,19 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         return false
     }
 
-    static performMovement(player, outside, key) {
+    static tryMovement(player, outside, key) {
         let moved = false
         let deltas = Direction.toDeltas(key) // get direction of movement
         
         // if movement / direction is valid (only w/a/s/d):
-        if (deltas != null) moved = this.movePlayer(player, outside, deltas)
-        
+        if (deltas != null) {
+            player.setDirection(key)
+            moved = this.movePlayer(player, outside, deltas)
+        }
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`
         prevCoordinatesDisplay.textContent = `(${player.prevX},${player.prevY})`
+        directionDisplay.textContent = `${player.direction}`
 
         return moved
     }

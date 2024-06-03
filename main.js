@@ -9,6 +9,9 @@ import { Outside } from "./modules/logic/main-game/space.js";
 import { MovementLock, MenuLock } from "./modules/time/lock.js";
 import { tryEncounter } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
+import { Action } from "./modules/constants/action.js";
+import { Direction } from "./modules/logic/main-game/direction.js";
+import { interactables } from "./modules/constants/interactables.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -17,11 +20,12 @@ let menuNavigator;
 
 let moveLock = new MovementLock()
 let menuLock = new MenuLock()
+let interactionLock = new MovementLock()
 
 async function gameLoop(timestamp) {
     let acted = moveLock.isUnlocked() ? processInput() : false // will perform locking mechanisms
 
-    handleGameRendering(acted)
+    handleGameRendering(acted) // TODO: handle case where if a single frame exceeds a certain time threshold (e.g. the intended time for all frames of a movement), we skip smooth rendering
     // console.log(menuLock.isLocked())
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
@@ -32,12 +36,41 @@ function processInput() {
     let activeKey = getActiveKey()
 
     handleMenu(activeKey)
+    handleInteraction(activeKey)
 
     if (activeKey === null) return false
 
-    handleGame(activeKey) // TODO: consider changing performMovement to work even with activeKey = null
+    handleMovement(activeKey) // TODO: consider changing tryMovement to work even with activeKey = null
 
     return true
+}
+
+function handleInteraction(activeKey) {
+    if (interactionLock.isLocked()) {
+        interactionLock.tick()
+        return
+    }
+
+    if (stateManager.isInGameState() && activeKey == Action.A) { // case: start interaction
+        let deltas = Direction.toDeltas(player.direction)
+        let targetX = player.x + deltas[0]
+        let targetY = player.y + deltas[1]
+        let coordinate = "" + targetX + targetY // TODO: consider changing approach
+
+        if (!interactables.has(coordinate)) return
+
+        let target = interactables.get(coordinate)
+        console.log(target.text)
+
+        stateManager.setState(State.Interaction)
+        interactionLock.lock()
+        return
+    } 
+    
+    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: dialogue continues
+        // TODO: implement when graphics are there, to be able to tell how much text can fit in one dialogue box
+        stateManager.setState(State.Game)
+    }
 }
 
 function handleGameRendering(acted) {
@@ -92,10 +125,10 @@ function handlePokemonEncounter() {
     }
 }
 
-function handleGame(activeKey) {
-    if (!stateManager.isInGameState() || moveLock.isLocked()) return
+function handleMovement(activeKey) {
+    if (!stateManager.isInGameState() || moveLock.isLocked() || activeKey == null) return
 
-    let moved = MovementHandler.performMovement(player, outside, activeKey)
+    let moved = MovementHandler.tryMovement(player, outside, activeKey)
     if (moved) {
         moveLock.lock()
         handlePokemonEncounter()

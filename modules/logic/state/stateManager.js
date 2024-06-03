@@ -28,6 +28,10 @@ export class StateManager {
         return this.state == State.Game || this.state == State.AwaitingEncounter
     }
 
+    isInInteractionState() {
+        return this.state == State.Interaction
+    }
+
     isInMenuState() {
         return this.state == State.Menu
     }

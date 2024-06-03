@@ -8,7 +8,7 @@ let keyboard = {
 let mode = 0
 const activeKeys = new Set()
 
-function addInputDetection() {
+export function addInputDetection() {
     document.addEventListener('keydown', function(event) {
         if (!keyisValid(event.key)) return // case: irrelevant input
         
@@ -31,11 +31,17 @@ function toggleMode(key) {
     mode ^= 1
 }
 
-function getActiveKey() {
+export function getActiveKey() {
     let activeKey = null
     if (activeKeys.size > 0) [activeKey] = activeKeys // gets head of set
 
     return activeKey
 }
 
-export { addInputDetection, getActiveKey }
+export function isMovementKey() {
+    return key == "w" || key == "a" || key == "s" || key == "d"
+}
+
+export function isActionKey() {
+    key == 'o'
+}

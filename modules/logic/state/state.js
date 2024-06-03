@@ -4,4 +4,5 @@ export const State = {
     Menu: 2,
     AwaitingEncounter: 3,
     Encounter: 4,
+    Interaction: 5
 }

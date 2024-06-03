@@ -6,10 +6,10 @@ export class Player {
         this.prevX = x
         this.prevY = y
 
-        this.movementDirection = null
+        this.direction = 's' // TODO: change depending on how player starts out
     }
 
-    setMovementDirection(direction) {
-        this.movementDirection = direction
+    setDirection(direction) {
+        this.direction = direction
     }
 }
