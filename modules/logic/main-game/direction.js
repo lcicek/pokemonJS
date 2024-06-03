@@ -1,5 +1,4 @@
 export class Direction {
-
     static isDirection(key) {
         return key == 'w' || key == 'a' || key == 's' || key == 'd'
     }
@@ -45,7 +44,7 @@ export class Direction {
     } 
 
     static toDeltas(key) {
-        if (key == null) return null;
+        if (!this.isDirection(key)) return null;
         
         let deltas = [0, 0];
     

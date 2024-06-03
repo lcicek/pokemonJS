@@ -4,20 +4,12 @@ var stateDisplay = document.getElementById("stateDisplay")
 
 export class StateManager {
     constructor() {
-        this.setGameState()
+        this.setState(State.Game)
     }
 
     setState(state) {
         this.state = state
         stateDisplay.textContent = `${Object.keys(State)[this.state]}`
-    }
-
-    setMenuState() {
-        this.setState(State.Menu)
-    }
-
-    setGameState() {
-        this.setState(State.Game)
     }
 
     getActiveState() {

@@ -23,8 +23,12 @@ export function addInputDetection() {
     })
 }
 
-function keyisValid(key) {
+export function keyisValid(key) {
     return key == "w" || key == "a" || key == "s" || key == "d" || key == 'o' || key =='k' || key == ' '
+}
+
+export function keyIsInvalid(key) {
+    return key == null || !keyisValid(key)
 }
 
 function toggleMode(key) {

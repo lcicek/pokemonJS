@@ -1,11 +1,13 @@
-import { framesPerMovement, framesPerNavigation } from "../constants/timeConstants.js";
-
 export class Lock {
     currentFrame = 0
-    endFrame = undefined   
+    endFrame = undefined
 
-    lock(duration) {
-        this.endFrame = duration
+    constructor(duration) {
+        this.duration = duration
+    }
+
+    lock() {
+        this.endFrame = this.duration // TODO: consider changing endframe and duration to be one thing
         this.currentFrame = 1 // TODO: check if it should be zero or one
     }
 
@@ -36,17 +38,5 @@ export class Lock {
 
     isLastTick() {
         return this.currentFrame == this.endFrame
-    }
-}
-
-export class MovementLock extends Lock {
-    lock() {
-        super.lock(framesPerMovement)
-    }
-}
-
-export class MenuLock extends Lock {
-    lock() {
-        super.lock(framesPerNavigation)
     }
 }
