@@ -1,14 +1,18 @@
 export class Lock {
     currentFrame = 0
     endFrame = undefined
+    duration = undefined
+    starTime = undefined
 
-    constructor(duration) {
-        this.duration = duration
+    constructor(intendedTimePerFrameMS) {
+        this.intendedTimePerFrameMS = intendedTimePerFrameMS
     }
 
-    lock() {
-        this.endFrame = this.duration // TODO: consider changing endframe and duration to be one thing
+    lock(frames, startTime) {
+        this.endFrame = frames // TODO: consider changing endframe and duration to be one thing
         this.currentFrame = 1 // TODO: check if it should be zero or one
+        this.startTime = startTime
+        this.duration = frames * this.intendedTimePerFrameMS
     }
 
     isUnlocked() {
@@ -17,18 +21,26 @@ export class Lock {
 
     unlock() {
         this.currentFrame = undefined
-        this.endFrame = undefined;
+        this.endFrame = undefined
+        this.duration = undefined
+        this.starTime = undefined
     }
     
     isLocked() {
         return !this.isUnlocked()
     }
 
-    tick() {
-        if (this.currentFrame !== undefined) this.currentFrame++
+    tick(timestamp) {
+        if (this.currentFrame !== undefined) {
+            this.currentFrame++
+        }
 
-        if (this.currentFrame > this.endFrame) {
+        if (this.currentFrame > this.endFrame || timestamp - this.starTime > this.duration) {
             this.unlock()
+        }
+
+        if (timestamp - this.starTime > this.duration) {
+            console.log("Lock-Frames were skipped due to a frame taking too long.")
         }
     }
 

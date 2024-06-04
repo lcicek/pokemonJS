@@ -9,7 +9,7 @@ context.imageSmoothingEnabled = false
 canvas.width = CANVAS_WIDTH //CANVAS_WIDTH
 canvas.height = CANVAS_HEIGHT // CANVAS_HEIGHT
 
-const shiftDistancePerFrame = Math.floor(SIZE / framesPerMovement)
+var shiftDistancePerFrame = 2 //Math.floor(SIZE / framesPerMovement)
 
 var startX = undefined
 var startY = undefined
@@ -18,8 +18,8 @@ var y = undefined
 var targetX = undefined
 var targetY = undefined
 
-function render(player, movementBegins, movementEnds) { // player x,y
-    if (movementBegins) prepareCoordinates(player)
+function render(player, movementBegins, movementEnds) {
+    if (movementBegins) prepareRender(player)
 
     let horizontalMovement = (targetX - startX) != 0
     let direction = (startX < targetX) || (startY < targetY) ? 1 : -1
@@ -30,17 +30,18 @@ function render(player, movementBegins, movementEnds) { // player x,y
         (!horizontalMovement && direction < 0 && y - shiftDistancePerFrame <= targetY)
 
     if (movementEnds || reachedTarget) {
+        if (!movementEnds && !reachedTarget) console.log("movementEnds != reachedTarget")
         x = targetX
         y = targetY
     } else {
-        // one of these will be zero since movement occurs only in one direction x/y:
         if (horizontalMovement && direction > 0) x += shiftDistancePerFrame
         else if (horizontalMovement && direction < 0) x -= shiftDistancePerFrame
         else if (!horizontalMovement && direction > 0) y += shiftDistancePerFrame
         else if (!horizontalMovement && direction < 0) y -= shiftDistancePerFrame   
     }
 
-    // console.log(x, y)
+    // toggle between shifting image 1px and 2px
+    shiftDistancePerFrame ^= 3 // TODO: consider finding alternate solution
 
     renderCanvasBackground() 
     renderMapBackground(x, y)
@@ -48,7 +49,9 @@ function render(player, movementBegins, movementEnds) { // player x,y
     renderMapForeground(x, y)
 }
 
-function prepareCoordinates(player) {
+function prepareRender(player) {
+    shiftDistancePerFrame = 2
+
     // TODO: check for possible performance improvement
     startX = -(player.prevX - NORMALIZE_X) * SIZE
     startY = -(player.prevY - NORMALIZE_Y) * SIZE

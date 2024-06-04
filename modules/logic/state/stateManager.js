@@ -32,6 +32,10 @@ export class StateManager {
         return this.state == State.AwaitingEncounter
     }
 
+    isInClosingFieldState() {
+        return this.state == State.ClosingField
+    }
+
     toString() {
         let i = this.getActiveState();
         return Object.keys(State)[i];

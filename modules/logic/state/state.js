@@ -5,5 +5,5 @@ export const State = {
     AwaitingEncounter: 3,
     Encounter: 4,
     Interaction: 5,
-    
+    ClosingField: 6
 }
