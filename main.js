@@ -1,4 +1,4 @@
-import { render } from "./modules/graphics/renderer.js";
+import { renderDialogue, renderMovement, renderPreviousBackground } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
@@ -13,19 +13,21 @@ import { Direction } from "./modules/logic/main-game/direction.js";
 import { interactables } from "./modules/constants/interactables.js";
 import { framesPerClosingField, framesPerMovement, framesPerNavigation, timePerFrameMS } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
+import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
 let stateManager = new StateManager()
 let menuNavigator;
+let dialogue = new Dialogue()
 
 let lock = new Lock(timePerFrameMS)
 
 async function gameLoop(timestamp) {
     let acted = processInput(timestamp) // will perform locking mechanisms
 
-    handleGameRendering(acted) // TODO: handle case where if a single frame exceeds a certain time threshold (e.g. the intended time for all frames of a movement), we skip smooth rendering
-    // console.log(menuLock.isLocked())
+    handleMovementRendering(acted)
+    handleDialogueRendering(acted)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
@@ -37,16 +39,20 @@ function processInput(timestamp) {
         return false
     }
 
-    if (stateManager.isInClosingFieldState()) stateManager.setState(State.Game)
+    if (stateManager.isInClosingFieldState()) {
+        stateManager.setState(State.Game)
+    }
 
     let activeKey = getActiveKey()
     if (keyIsInvalid(activeKey)) return false
 
-    tryMenu(activeKey, timestamp)
-    tryInteraction(activeKey, timestamp)
-    tryMovement(activeKey, timestamp) // TODO: consider changing tryMovement to work even with activeKey = null
+    let navigated = tryMenu(activeKey, timestamp)
+    let interacted = tryInteraction(activeKey, timestamp)
+    let moved = tryMovement(activeKey, timestamp) // TODO: consider changing tryMovement to work even with activeKey = null
 
-    return true
+    let acted = navigated || interacted || moved
+
+    return acted
 }
 
 function tryInteraction(activeKey, timestamp) {
@@ -56,31 +62,53 @@ function tryInteraction(activeKey, timestamp) {
         let targetY = player.y + deltas[1]
         let coordinate = "" + targetX + targetY // TODO: consider changing approach
 
-        if (!interactables.has(coordinate)) return
+        if (!interactables.has(coordinate)) return false
 
         let target = interactables.get(coordinate)
-        console.log(target.text)
+        
+        dialogue.setText(target.text)
 
         stateManager.setState(State.Interaction)
         lock.lock(framesPerNavigation, timestamp)
-        return
+        return true
     } 
     
-    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: dialogue continues
+    if (stateManager.isInInteractionState() && (activeKey == Action.A)) { // case: dialogue continues
         // TODO: implement when graphics are there, to be able to tell how much text can fit in one dialogue box
-        stateManager.setState(State.ClosingField)
-        lock.lock(framesPerClosingField, timestamp)
+        if (dialogue.isLastBlock()) {
+            stateManager.setState(State.ClosingField)
+            lock.lock(framesPerClosingField, timestamp)
+        } else {
+            dialogue.nextBlock()
+            lock.lock(framesPerNavigation, timestamp)
+        }
+
+        return true
     }
+
+    return false
 }
 
-function handleGameRendering(acted) {
+function handleDialogueRendering(acted) {
+    if (stateManager.isInClosingFieldState()) {
+        renderPreviousBackground()
+        return
+    }
+
+    if (!stateManager.isInInteractionState()) return
+    if (stateManager.isInInteractionState && !acted) return
+
+    renderDialogue(dialogue.getCurrentBlock(), dialogue.isLastBlock())
+}
+
+function handleMovementRendering(acted) {
     if (!stateManager.isInGameState()) return
     if (!acted && lock.isUnlocked()) return // i.e. no new action and no past action that still needs to be rendered
 
     let movementBegins = lock.isFirstTick()
     let movementEnds = lock.isLastTick()
 
-    render(player, movementBegins, movementEnds)
+    renderMovement(player, movementBegins, movementEnds)
 
     if (lock.isUnlocked() && stateManager.isAwaitingEncounter()) {
         stateManager.setState(State.Encounter)
@@ -88,15 +116,15 @@ function handleGameRendering(acted) {
 }
 
 function tryMenu(activeKey, timestamp) {
-    if (lock.isLocked()) return
-    if (!stateManager.isInGameState() && !stateManager.isInMenuState()) return // only states where menu can be interacted with
+    if (lock.isLocked()) return false
+    if (!stateManager.isInGameState() && !stateManager.isInMenuState()) return false // only states where menu can be interacted with
 
     // case: menu is closed
     if (menuNavigator.isClosed()) {
         let wasOpened = menuNavigator.tryOpen(activeKey)
         if (wasOpened) stateManager.setState(State.Menu)
         
-        return
+        return wasOpened
     }
 
     // case: menu is open
@@ -105,10 +133,12 @@ function tryMenu(activeKey, timestamp) {
     if (menuNavigator.isClosed()) { // case: user closed menu
         stateManager.setState(State.ClosingField)
         lock.lock(framesPerClosingField, timestamp)
-        return
+        return true
     } 
 
     if (navigated) lock.lock(framesPerNavigation, timestamp)
+
+    return navigated
 }
 
 function handlePokemonEncounter() {
@@ -123,19 +153,21 @@ function handlePokemonEncounter() {
 }
 
 function tryMovement(activeKey, timestamp) {
-    if (lock.isLocked()) return
-    if (!stateManager.isInGameState()) return
+    if (lock.isLocked()) return false
+    if (!stateManager.isInGameState()) return false
 
     let moved = MovementHandler.tryMovement(player, outside, activeKey)
     if (moved) {
         lock.lock(framesPerMovement, timestamp)
         handlePokemonEncounter()
     }
+
+    return moved
 }
 
 window.onload = function() {
     addInputDetection()
-    render(player, true, true) // initial render
+    renderMovement(player, true, true) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)

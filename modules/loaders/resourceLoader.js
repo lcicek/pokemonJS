@@ -1,14 +1,17 @@
-let outsideImageBG = new Image()
+export const outsideImageBG = new Image()
 outsideImageBG.src = "./assets/map/default-map-background.png"
 
-let outsideImageFG = new Image()
+export const outsideImageFG = new Image()
 outsideImageFG.src = "./assets/map/default-map-foreground.png"
 
-let grassImageFG = new Image()
+export const grassImageFG = new Image()
 grassImageFG.src = "./assets/background-sprites/grass-foreground.png"
 
-let characterSf = new Image()
+export const characterSf = new Image()
 characterSf.src = "./assets/character-sprites/sf.png"
 
+export const dialogueBoxImage = new Image()
+dialogueBoxImage.src = "./assets/dialogue/dialogue-box.png"
 
-export { outsideImageBG, outsideImageFG, characterSf}
+export const downArrowImage = new Image()
+downArrowImage.src = "./assets/dialogue/arrow-down.png"

@@ -1,5 +1,5 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y } from "../constants/graphicConstants.js";
-import { outsideImageBG, outsideImageFG, characterSf } from "../loaders/resourceLoader.js";
+import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y } from "../constants/graphicConstants.js";
+import { outsideImageBG, outsideImageFG, characterSf, dialogueBoxImage, downArrowImage } from "../loaders/resourceLoader.js";
 import { timePerFrameMS, framesPerMovement } from "../constants/timeConstants.js";
 
 const canvas = document.getElementById("canvas");
@@ -18,8 +18,23 @@ var y = undefined
 var targetX = undefined
 var targetY = undefined
 
-function render(player, movementBegins, movementEnds) {
-    if (movementBegins) prepareRender(player)
+export function renderPreviousBackground() {
+    if (x == undefined || y == undefined) return
+
+    renderCanvasBackground() 
+    renderMapBackground(x, y)
+    renderPlayer()
+    renderMapForeground(x, y)
+}
+
+export function renderDialogue(textBlock, isLastBlock) {
+    renderDialogueBox(textBlock)
+
+    if (!isLastBlock) renderDialogueArrow()
+}
+
+export function renderMovement(player, movementBegins, movementEnds) {
+    if (movementBegins) prepareMovementRender(player)
 
     let horizontalMovement = (targetX - startX) != 0
     let direction = (startX < targetX) || (startY < targetY) ? 1 : -1
@@ -49,7 +64,7 @@ function render(player, movementBegins, movementEnds) {
     renderMapForeground(x, y)
 }
 
-function prepareRender(player) {
+function prepareMovementRender(player) {
     shiftDistancePerFrame = 2
 
     // TODO: check for possible performance improvement
@@ -80,4 +95,11 @@ function renderPlayer() {
     context.drawImage(characterSf, CENTER_WIDTH, CENTER_HEIGHT - SIZE/2)
 }
 
-export {render}
+function renderDialogueBox(textBlock) {
+    console.log(textBlock)
+    context.drawImage(dialogueBoxImage, DIALOGUE_X, DIALOGUE_Y)
+}
+
+function renderDialogueArrow() {
+    context.drawImage(downArrowImage, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y)
+}
