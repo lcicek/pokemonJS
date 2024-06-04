@@ -1,8 +1,14 @@
 canvas {
     background: black;
+    image-rendering: pixelated
 }
 
 @font-face {
-    font-family: 'dialogue';
+    font-family: dialogue;
     src: url('./assets/dialogue/dialogue-font.ttf');
+}
+
+span {
+    font-family: dialogue;
+    font-size: 16px;
 }

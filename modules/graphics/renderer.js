@@ -19,7 +19,7 @@ var targetX = undefined
 var targetY = undefined
 
 export function setFont() { // TODO: fix error that initial font used is wrong
-    context.font = "18px dialogue"
+    context.font = "16px dialogue"
 }
 
 export function renderPreviousBackground() {
