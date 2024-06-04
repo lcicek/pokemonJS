@@ -1,3 +1,8 @@
 canvas {
     background: black;
 }
+
+@font-face {
+    font-family: 'dialogue';
+    src: url('./assets/dialogue/dialogue-font.ttf');
+}

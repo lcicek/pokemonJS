@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y } from "../constants/graphicConstants.js";
+import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y, DIALOGUE_LINE_1_X, DIALOGUE_LINE_1_Y, DIALOGUE_LINE_2_X, DIALOGUE_LINE_2_Y } from "../constants/graphicConstants.js";
 import { outsideImageBG, outsideImageFG, characterSf, dialogueBoxImage, downArrowImage } from "../loaders/resourceLoader.js";
 import { timePerFrameMS, framesPerMovement } from "../constants/timeConstants.js";
 
@@ -18,6 +18,10 @@ var y = undefined
 var targetX = undefined
 var targetY = undefined
 
+export function setFont() { // TODO: fix error that initial font used is wrong
+    context.font = "18px dialogue"
+}
+
 export function renderPreviousBackground() {
     if (x == undefined || y == undefined) return
 
@@ -28,6 +32,7 @@ export function renderPreviousBackground() {
 }
 
 export function renderDialogue(textBlock, isLastBlock) {
+    setFont()
     renderDialogueBox(textBlock)
 
     if (!isLastBlock) renderDialogueArrow()
@@ -96,8 +101,9 @@ function renderPlayer() {
 }
 
 function renderDialogueBox(textBlock) {
-    console.log(textBlock)
     context.drawImage(dialogueBoxImage, DIALOGUE_X, DIALOGUE_Y)
+    context.fillText(textBlock[0], DIALOGUE_LINE_1_X, DIALOGUE_LINE_1_Y);
+    if (textBlock.length > 1) context.fillText(textBlock[1], DIALOGUE_LINE_2_X, DIALOGUE_LINE_2_Y);
 }
 
 function renderDialogueArrow() {

@@ -1,4 +1,4 @@
-import { renderDialogue, renderMovement, renderPreviousBackground } from "./modules/graphics/renderer.js";
+import { renderDialogue, renderMovement, renderPreviousBackground, setFont } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
@@ -73,7 +73,7 @@ function tryInteraction(activeKey, timestamp) {
         return true
     } 
     
-    if (stateManager.isInInteractionState() && (activeKey == Action.A)) { // case: dialogue continues
+    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: dialogue continues
         // TODO: implement when graphics are there, to be able to tell how much text can fit in one dialogue box
         if (dialogue.isLastBlock()) {
             stateManager.setState(State.ClosingField)
@@ -167,6 +167,7 @@ function tryMovement(activeKey, timestamp) {
 
 window.onload = function() {
     addInputDetection()
+    setFont()
     renderMovement(player, true, true) // initial render
 
     menuNavigator = new MenuNavigator()
