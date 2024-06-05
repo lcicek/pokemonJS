@@ -1,7 +1,10 @@
 var encounterDisplay = document.getElementById("encounterDisplay")
 
-function tryEncounter() {
-    let pokemonEncountered = encounterOccurs()
+export function encounterOccurs() {
+    let encounterProbability = 0.1 // TODO: put in constants file
+    let threshold = encounterProbability * 10
+    let randomNumber = Math.floor(Math.random() * 10) + 1; // between 1 and 10
+    let pokemonEncountered = randomNumber <= threshold
 
     if (pokemonEncountered) {
         encounterDisplay.textContent = `true`
@@ -11,14 +14,3 @@ function tryEncounter() {
 
     return pokemonEncountered
 }
-
-function encounterOccurs() {
-    let encounterProbability = 0.1 // TODO: put in constants file
-    let threshold = encounterProbability * 10
-    let randomNumber = Math.floor(Math.random() * 10) + 1; // between 1 and 10
-
-    return randomNumber <= threshold
-}
-
-
-export { tryEncounter }

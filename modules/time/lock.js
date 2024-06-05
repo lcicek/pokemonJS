@@ -1,6 +1,6 @@
 export class Lock {
-    currentFrame = 0
-    endFrame = undefined
+    currentTick = 0
+    endTick = undefined
     duration = undefined
     starTime = undefined
 
@@ -9,19 +9,19 @@ export class Lock {
     }
 
     lock(frames, startTime) {
-        this.endFrame = frames // TODO: consider changing endframe and duration to be one thing
-        this.currentFrame = 1 // TODO: check if it should be zero or one
+        this.endTick = frames // TODO: consider changing endTick and duration to be one thing
+        this.currentTick = 1 // TODO: check if it should be zero or one
         this.startTime = startTime
         this.duration = frames * this.intendedTimePerFrameMS
     }
 
     isUnlocked() {
-        return this.endFrame === undefined
+        return this.endTick === undefined
     }
 
     unlock() {
-        this.currentFrame = undefined
-        this.endFrame = undefined
+        this.currentTick = undefined
+        this.endTick = undefined
         this.duration = undefined
         this.starTime = undefined
     }
@@ -31,11 +31,11 @@ export class Lock {
     }
 
     tick(timestamp) {
-        if (this.currentFrame !== undefined) {
-            this.currentFrame++
+        if (this.currentTick !== undefined) {
+            this.currentTick++
         }
 
-        if (this.currentFrame > this.endFrame || timestamp - this.starTime > this.duration) {
+        if (this.currentTick > this.endTick || timestamp - this.starTime > this.duration) {
             this.unlock()
         }
 
@@ -45,10 +45,18 @@ export class Lock {
     }
 
     isFirstTick() {
-        return this.currentFrame == 1
+        return this.currentTick == 1
+    }
+
+    getTick() {
+        return this.currentTick
+    }
+
+    isEveryThirdTick() {
+        return this.currentTick % 3 == 0
     }
 
     isLastTick() {
-        return this.currentFrame == this.endFrame
+        return this.currentTick == this.endTick
     }
 }

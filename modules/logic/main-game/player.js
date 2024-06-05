@@ -12,4 +12,8 @@ export class Player {
     setDirection(direction) {
         this.direction = direction
     }
+    
+    collided() {
+        return this.prevX == this.x && this.prevY == this.y
+    }
 }

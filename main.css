@@ -1,6 +1,7 @@
 canvas {
     background: black;
-    image-rendering: pixelated
+    image-rendering: pixelated;
+    float: left;
 }
 
 @font-face {

@@ -13,7 +13,10 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         let targetY = player.y + deltas[1]
 
         if (outside.collides(targetX, targetY)) {
-            return false
+            player.prevX = player.x
+            player.prevY = player.y
+
+            return true
         }
 
         if (targetX < outside.width && targetY < outside.height && targetX >= 0 && targetY >= 0) {

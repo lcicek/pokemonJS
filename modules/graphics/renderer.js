@@ -1,5 +1,5 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, NORMALIZE_X, NORMALIZE_Y, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y, DIALOGUE_LINE_1_X, DIALOGUE_LINE_1_Y, DIALOGUE_LINE_2_X, DIALOGUE_LINE_2_Y } from "../constants/graphicConstants.js";
-import { outsideImageBG, outsideImageFG, characterSf, dialogueBoxImage, downArrowImage } from "../loaders/resourceLoader.js";
+import { outsideImageBG, outsideImageFG, dialogueBoxImage, downArrowImage } from "../loaders/image-loaders/backgroundImages.js";
 import { timePerFrameMS, framesPerMovement } from "../constants/timeConstants.js";
 
 const canvas = document.getElementById("canvas");
@@ -8,8 +8,6 @@ context.imageSmoothingEnabled = false
 
 canvas.width = CANVAS_WIDTH //CANVAS_WIDTH
 canvas.height = CANVAS_HEIGHT // CANVAS_HEIGHT
-
-var shiftDistancePerFrame = 2 //Math.floor(SIZE / framesPerMovement)
 
 var startX = undefined
 var startY = undefined
@@ -22,12 +20,12 @@ export function setFont() { // TODO: fix error that initial font used is wrong
     context.font = "16px dialogue"
 }
 
-export function renderPreviousBackground() {
+export function renderPreviousBackground(playerKeyFrame) {
     if (x == undefined || y == undefined) return
 
     renderCanvasBackground() 
     renderMapBackground(x, y)
-    renderPlayer()
+    renderPlayer(playerKeyFrame)
     renderMapForeground(x, y)
 }
 
@@ -38,9 +36,10 @@ export function renderDialogue(textBlock, isLastBlock) {
     if (!isLastBlock) renderDialogueArrow()
 }
 
-export function renderMovement(player, movementBegins, movementEnds) {
+export function renderMovement(player, movementBegins, movementEnds, isThirdTick, playerKeyFrame) {
     if (movementBegins) prepareMovementRender(player)
 
+    let shiftDistancePerFrame = isThirdTick ? 2 : 1
     let horizontalMovement = (targetX - startX) != 0
     let direction = (startX < targetX) || (startY < targetY) ? 1 : -1
     let reachedTarget = 
@@ -60,18 +59,13 @@ export function renderMovement(player, movementBegins, movementEnds) {
         else if (!horizontalMovement && direction < 0) y -= shiftDistancePerFrame   
     }
 
-    // toggle between shifting image 1px and 2px
-    shiftDistancePerFrame ^= 3 // TODO: consider finding alternate solution
-
     renderCanvasBackground() 
     renderMapBackground(x, y)
-    renderPlayer()
+    renderPlayer(playerKeyFrame)
     renderMapForeground(x, y)
 }
 
 function prepareMovementRender(player) {
-    shiftDistancePerFrame = 2
-
     // TODO: check for possible performance improvement
     startX = -(player.prevX - NORMALIZE_X) * SIZE
     startY = -(player.prevY - NORMALIZE_Y) * SIZE
@@ -96,8 +90,8 @@ function renderMapForeground(x, y) {
     context.drawImage(outsideImageFG, x, y)
 }
 
-function renderPlayer() {
-    context.drawImage(characterSf, CENTER_WIDTH, CENTER_HEIGHT - SIZE/2)
+function renderPlayer(playerKeyFrame) {
+    context.drawImage(playerKeyFrame, CENTER_WIDTH, CENTER_HEIGHT - SIZE/2)
 }
 
 function renderDialogueBox(textBlock) {

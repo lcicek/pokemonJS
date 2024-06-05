@@ -6,7 +6,7 @@ import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
 import { StateManager } from "./modules/logic/state/stateManager.js";
 import { Outside } from "./modules/logic/main-game/space.js";
-import { tryEncounter } from "./modules/logic/main-game/pokemonEncounter.js";
+import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Action } from "./modules/constants/action.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
@@ -14,9 +14,11 @@ import { interactables } from "./modules/constants/interactables.js";
 import { framesPerClosingField, framesPerMovement, framesPerNavigation, timePerFrameMS } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
+import { PlayerAnimation } from "./modules/graphics/animation.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
+let playerAnimation = new PlayerAnimation()
 let stateManager = new StateManager()
 let menuNavigator;
 let dialogue = new Dialogue()
@@ -25,6 +27,10 @@ let lock = new Lock(timePerFrameMS)
 
 async function gameLoop(timestamp) {
     let acted = processInput(timestamp) // will perform locking mechanisms
+
+    if (lock.isUnlocked() && stateManager.isAwaitingEncounter()) {
+        stateManager.setState(State.Encounter)
+    }
 
     handleMovementRendering(acted)
     handleDialogueRendering(acted)
@@ -49,6 +55,7 @@ function processInput(timestamp) {
     let navigated = tryMenu(activeKey, timestamp)
     let interacted = tryInteraction(activeKey, timestamp)
     let moved = tryMovement(activeKey, timestamp) // TODO: consider changing tryMovement to work even with activeKey = null
+    if (moved) tryPokemonEncounter()
 
     let acted = navigated || interacted || moved
 
@@ -91,7 +98,7 @@ function tryInteraction(activeKey, timestamp) {
 
 function handleDialogueRendering(acted) {
     if (stateManager.isInClosingFieldState()) {
-        renderPreviousBackground()
+        renderPreviousBackground(playerAnimation.getKeyframe())
         return
     }
 
@@ -107,12 +114,11 @@ function handleMovementRendering(acted) {
 
     let movementBegins = lock.isFirstTick()
     let movementEnds = lock.isLastTick()
+    let isThirdTick = lock.isEveryThirdTick()
 
-    renderMovement(player, movementBegins, movementEnds)
+    playerAnimation.setKeyframe(lock.getTick())
 
-    if (lock.isUnlocked() && stateManager.isAwaitingEncounter()) {
-        stateManager.setState(State.Encounter)
-    }
+    renderMovement(player, movementBegins, movementEnds, isThirdTick, playerAnimation.getKeyframe())
 }
 
 function tryMenu(activeKey, timestamp) {
@@ -141,13 +147,11 @@ function tryMenu(activeKey, timestamp) {
     return navigated
 }
 
-function handlePokemonEncounter() {
+function tryPokemonEncounter() {
     let playerIsInBush = outside.isBush(player.x, player.y)
-    if (!playerIsInBush) return
+    if (!playerIsInBush || player.collided()) return
 
-    let pokemonEncountered = tryEncounter() // TODO: also determine which pokemon is encountered
-    
-    if (pokemonEncountered) {
+    if (encounterOccurs()) { // TODO: also determine which pokemon is encountered
         stateManager.setState(State.AwaitingEncounter)
     }
 }
@@ -156,10 +160,11 @@ function tryMovement(activeKey, timestamp) {
     if (lock.isLocked()) return false
     if (!stateManager.isInGameState()) return false
 
-    let moved = MovementHandler.tryMovement(player, outside, activeKey)
+    let moved = MovementHandler.tryMovement(player, outside, activeKey) // will update player location and direction
     if (moved) {
+        playerAnimation.setCycle(player.direction)
+        playerAnimation.toggleStep()
         lock.lock(framesPerMovement, timestamp)
-        handlePokemonEncounter()
     }
 
     return moved
@@ -168,7 +173,7 @@ function tryMovement(activeKey, timestamp) {
 window.onload = function() {
     addInputDetection()
     setFont()
-    renderMovement(player, true, true) // initial render
+    renderMovement(player, true, true, false, playerAnimation.getKeyframe()) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)
