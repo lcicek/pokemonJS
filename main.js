@@ -15,10 +15,12 @@ import { framesPerClosingField, framesPerMovement, framesPerNavigation, timePerF
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { PlayerAnimation } from "./modules/graphics/animation.js";
+import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
 let playerAnimation = new PlayerAnimation()
+let playerVisual = new PlayerVisual(player);
 let stateManager = new StateManager()
 let menuNavigator;
 let dialogue = new Dialogue()
@@ -26,11 +28,9 @@ let dialogue = new Dialogue()
 let lock = new Lock(timePerFrameMS)
 
 async function gameLoop(timestamp) {
-    let acted = processInput(timestamp) // will perform locking mechanisms
+    tryUpdateIntermediateState()
 
-    if (lock.isUnlocked() && stateManager.isAwaitingEncounter()) {
-        stateManager.setState(State.Encounter)
-    }
+    let acted = processInput(timestamp) // will perform locking mechanisms
 
     handleMovementRendering(acted)
     handleDialogueRendering(acted)
@@ -39,14 +39,23 @@ async function gameLoop(timestamp) {
     window.requestAnimationFrame(gameLoop)
 };
 
-function processInput(timestamp) {
-    if (lock.isLocked()) {
-        lock.tick(timestamp)
-        return false
+function tryUpdateIntermediateState() {
+    if (lock.isLocked()) return
+
+    if (stateManager.isAwaitingEncounter()) {
+        stateManager.setState(State.Encounter)
+        return
     }
 
     if (stateManager.isInClosingFieldState()) {
         stateManager.setState(State.Game)
+    }
+}
+
+function processInput(timestamp) {
+    if (lock.isLocked()) {
+        lock.tick(timestamp)
+        return false
     }
 
     let activeKey = getActiveKey()
@@ -63,7 +72,7 @@ function processInput(timestamp) {
 }
 
 function tryInteraction(activeKey, timestamp) {
-    if (stateManager.isInGameState() && activeKey == Action.A) { // case: start interaction
+    if (stateManager.isInGameState() && activeKey == Action.A) { // case: start
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
@@ -80,8 +89,7 @@ function tryInteraction(activeKey, timestamp) {
         return true
     } 
     
-    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: dialogue continues
-        // TODO: implement when graphics are there, to be able to tell how much text can fit in one dialogue box
+    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: continues
         if (dialogue.isLastBlock()) {
             stateManager.setState(State.ClosingField)
             lock.lock(framesPerClosingField, timestamp)
@@ -98,7 +106,7 @@ function tryInteraction(activeKey, timestamp) {
 
 function handleDialogueRendering(acted) {
     if (stateManager.isInClosingFieldState()) {
-        renderPreviousBackground(playerAnimation.getKeyframe())
+        renderPreviousBackground(playerAnimation.getKeyframe(), playerVisual.x, playerVisual.y)
         return
     }
 
@@ -109,16 +117,18 @@ function handleDialogueRendering(acted) {
 }
 
 function handleMovementRendering(acted) {
-    if (!stateManager.isInGameState()) return
-    if (!acted && lock.isUnlocked()) return // i.e. no new action and no past action that still needs to be rendered
+    if (!stateManager.isInGameState() || (!acted && lock.isUnlocked())) return // i.e. no new action and no past action that still needs to be rendered
 
     let movementBegins = lock.isFirstTick()
     let movementEnds = lock.isLastTick()
-    let isThirdTick = lock.isEveryThirdTick()
+
+    if (movementBegins) playerVisual.updatePosition(player)
+    else if (movementEnds) playerVisual.setPositionToNext()
+    else if (!player.collided()) playerVisual.shiftVisual(player.direction)
 
     playerAnimation.setKeyframe(lock.getTick())
 
-    renderMovement(player, movementBegins, movementEnds, isThirdTick, playerAnimation.getKeyframe())
+    renderMovement(playerAnimation.getKeyframe(), playerVisual.x, playerVisual.y)
 }
 
 function tryMenu(activeKey, timestamp) {
@@ -173,7 +183,7 @@ function tryMovement(activeKey, timestamp) {
 window.onload = function() {
     addInputDetection()
     setFont()
-    renderMovement(player, true, true, false, playerAnimation.getKeyframe()) // initial render
+    renderMovement(playerAnimation.getKeyframe(), playerVisual.x, playerVisual.y) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)
