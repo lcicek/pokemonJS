@@ -86,7 +86,7 @@ export class BagMenu extends ColumnMenuInterface {
     }
 
     add(item) {
-        this.items.add(item)
+        this.items.add(item) // TODO: should be push perhaps
         this.length++;
     }
 

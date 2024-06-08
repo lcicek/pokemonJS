@@ -1,18 +1,16 @@
+import { timePerFrameMS } from "../constants/timeConstants.js"
+
 export class Lock {
     currentTick = 0
     endTick = undefined
     duration = undefined
     starTime = undefined
 
-    constructor(intendedTimePerFrameMS) {
-        this.intendedTimePerFrameMS = intendedTimePerFrameMS
-    }
-
     lock(frames, startTime) {
         this.endTick = frames // TODO: consider changing endTick and duration to be one thing
         this.currentTick = 1 // TODO: check if it should be zero or one
         this.startTime = startTime
-        this.duration = frames * this.intendedTimePerFrameMS
+        this.duration = frames * timePerFrameMS
     }
 
     isUnlocked() {
@@ -52,11 +50,11 @@ export class Lock {
         return this.currentTick
     }
 
-    isEveryThirdTick() {
-        return this.currentTick % 3 == 0
-    }
-
     isLastTick() {
         return this.currentTick == this.endTick
+    }
+
+    isHalfwayElapsed() {
+        return this.currentTick >= Math.floor(this.endTick / 2) // TODO: check math floor usage. should be correct for 32
     }
 }

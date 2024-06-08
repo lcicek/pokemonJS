@@ -1,11 +1,10 @@
-const FPS = 30
-const timePerFrame = 1 / FPS // in s
-const timePerFrameMS = timePerFrame * 1000 // in ms
+export const FPS = 30
+export const timePerFrame = 1 / FPS // in s
+export const timePerFrameMS = timePerFrame * 1000 // in ms
 
 
 // ideally, disivible by SIZE (i.e. 32/64/...)
-const framesPerMovement = 32
-const framesPerNavigation = 32
-const framesPerClosingField = 32
-
-export { FPS, timePerFrame, framesPerMovement, framesPerNavigation, framesPerClosingField, timePerFrameMS }
+export const framesPerMovement = 32
+export const framesPerNavigation = 32
+export const framesPerClosingField = 32
+export const framesPerGrassAnimation = 4 * framesPerMovement // 192

@@ -13,8 +13,8 @@ async function enforceFps(timestamp) {
     prevTimestamp = timestamp
     
     if (remaining >= 0) {
-        fpsDisplay.textContent = FPS // = 1 / timePerFrame = 1 / (elapsed + remaining) 
-        await sleep(remaining)
+        fpsDisplay.textContent = FPS // = 1 / timePerFrame = 1 / (elapsed + remaining)
+        await sleep(remaining) // TODO: fix
     } else {
         let currentFPS = Math.round(1 / elapsed)
         fpsDisplay.textContent = currentFPS
