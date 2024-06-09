@@ -27,17 +27,22 @@ export function renderDialogue(textBlock, isLastBlock) {
     if (!isLastBlock) renderDialogueArrow()
 }
 
-export function renderBushLeaves(relativeCoordinates, remainingShifts) { // TODO: needs to occur before final foreground rendering
+export function renderBushLeaves(keyframes, relativeCoordinates, remainingShifts) { // TODO: needs to occur before final foreground rendering
+    if (keyframes.length == 0) return
+    console.log(keyframes)
+    
     context.fillStyle = 'red'
     let remainingShiftsX = remainingShifts[0]
     let remainingShiftsY = remainingShifts[1]
 
-    for (let coordinates of relativeCoordinates) {
-        //context.fillRect(CENTER_WIDTH - remainingShiftsX, CENTER_HEIGHT - remainingShiftsY, 32, 32)
-        context.fillRect(
+    for (let i = 0; i < relativeCoordinates.length; i++) {
+        let coordinates = relativeCoordinates[i]
+        let keyframe = keyframes[i]
+
+        context.drawImage(
+            keyframe,
             CENTER_WIDTH + coordinates[0]*SIZE - remainingShiftsX,
-            CENTER_HEIGHT + coordinates[1]*SIZE - remainingShiftsY,
-            32, 32
+            CENTER_HEIGHT - SIZE + coordinates[1]*SIZE - remainingShiftsY,
         )
     }
 }

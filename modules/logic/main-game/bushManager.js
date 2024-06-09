@@ -35,6 +35,15 @@ export class BushManager {
 
         return false
     }
+
+    getTicks() { // TODO: consider outputting this alongside relative coordinates for performance
+        let ticks = []
+        for (let bush of this.bushes) {
+            ticks.push(bush.getTick())
+        }
+
+        return ticks
+    }
     
     getRelativeCoordinates(playerX, playerY) {
         let relativeCoordinates = []

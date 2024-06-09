@@ -14,7 +14,7 @@ import { interactables } from "./modules/constants/interactables.js";
 import { framesPerClosingField, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
-import { PlayerAnimation } from "./modules/graphics/animation.js";
+import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { SIZE } from "./modules/constants/graphicConstants.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
@@ -27,6 +27,7 @@ let stateManager = new StateManager()
 let menuNavigator;
 let dialogue = new Dialogue()
 let bushManager = new BushManager()
+let grassAnimation = new GrassAnimation()
 
 let lock = new Lock()
 
@@ -38,7 +39,10 @@ async function gameLoop(timestamp) {
     //if (bushManager.getRelativeCoordinates(player.x, player.y).length > 0) console.log(JSON.stringify(bushManager.getRelativeCoordinates(player.x, player.y)))
 
     handleMovementRendering(acted)
-    renderBushLeaves(bushManager.getRelativeCoordinates(player.x, player.y), playerVisual.getRemainingShifts())
+    let removed = bushManager.tryRemove()
+    if (!bushManager.isIdle() && !acted && lock.isUnlocked()) renderMovement(playerAnimation.getKeyframe(17), playerVisual, outside.isBush(player.x, player.y))
+    if (removed && bushManager.isIdle()) renderMovement(playerAnimation.getKeyframe(17), playerVisual, false)
+    renderBushLeaves(grassAnimation.getKeyframes(bushManager.getTicks()), bushManager.getRelativeCoordinates(player.x, player.y), playerVisual.getRemainingShifts())
     handleDialogueRendering(acted)
     handleBushes() 
 
@@ -143,11 +147,9 @@ function handleMovementRendering(acted) {
     if (!movementEnds && !player.collided()) playerVisual.shiftVisual(player.direction)
     else if (movementEnds) playerVisual.ensurePositionIsNext()
 
-    playerAnimation.setKeyframe(lock.getTick())
-
     let bushShouldBeRendered = outside.isBush(player.x, player.y) && (!Direction.north(player.direction) || movementEnds)
 
-    renderMovement(playerAnimation.getKeyframe(), playerVisual, bushShouldBeRendered)
+    renderMovement(playerAnimation.getKeyframe(lock.getTick()), playerVisual, bushShouldBeRendered)
 }
 
 function tryMenu(activeKey, timestamp) {
@@ -191,7 +193,7 @@ function tryMovement(activeKey, timestamp) {
 
     let moved = MovementHandler.tryMovement(player, outside, activeKey) // will update player location and direction
     if (moved) {
-        playerAnimation.setCycle(player.direction)
+        playerAnimation.setKeyframeCycle(player.direction)
         playerAnimation.toggleStep()
         lock.lock(framesPerMovement, timestamp)
 
@@ -206,7 +208,7 @@ function tryMovement(activeKey, timestamp) {
 window.onload = function() {
     addInputDetection()
     setFont()
-    renderMovement(playerAnimation.getKeyframe(), playerVisual, false) // initial render
+    renderMovement(playerAnimation.getKeyframe(17), playerVisual, false) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)

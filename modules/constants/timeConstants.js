@@ -8,3 +8,6 @@ export const framesPerMovement = 32
 export const framesPerNavigation = 32
 export const framesPerClosingField = 32
 export const framesPerGrassAnimation = 4 * framesPerMovement // 192
+
+export const ticksPerMovementKeyframe = framesPerMovement / 2
+export const ticksPerGrassKeyframe = framesPerGrassAnimation / 4
