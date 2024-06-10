@@ -44,6 +44,7 @@ export class PlayerAnimation extends Animation {
         // these variables are set so that the animation initially points to 'f'
         this.currentCycleIndex = 0
         this.step = 1
+        this.lastKeyframe = f
     }
 
     setKeyframeCycle(direction) {
@@ -63,6 +64,9 @@ export class PlayerAnimation extends Animation {
     }
 
     getKeyframe(tick) {
-        return this.keyframes[this.currentCycleIndex][this.step][this.indexOfKeyframe(tick)]
+        let keyframe = this.keyframes[this.currentCycleIndex][this.step][this.indexOfKeyframe(tick)]
+        this.lastKeyframe = keyframe
+
+        return keyframe
     }
 }

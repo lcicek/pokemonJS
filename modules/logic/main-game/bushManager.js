@@ -5,7 +5,7 @@ export class BushManager {
         this.bushes = []
     }
 
-    update() {
+    tryUpdate() {
         for (let bush of this.bushes) bush.update()
     }
 

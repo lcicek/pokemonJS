@@ -12,13 +12,19 @@ export function setFont() { // TODO: fix error that initial font used is wrong
     context.font = "16px dialogue"
 }
 
-export function renderPreviousBackground(playerKeyFrame, playerVisual) {
-    renderCanvasBackground() 
-    renderMapBackground(playerVisual.x, playerVisual.y)
+export function renderPreviousBackground(playerKeyFrame, playerVisual, playerIsInBush) {
+    renderBackgrounds(playerVisual.x, playerVisual.y)
     renderPlayer(playerKeyFrame)
-    renderBush(playerVisual.deltas[0], playerVisual.deltas[1])
+    renderBush(playerVisual, playerIsInBush)
+}
+
+export function renderRegularMovement(playerVisual, playerKeyframe, bushShouldBeRendered) {
+    renderBackgrounds(playerVisual.x, playerVisual.y)
+    renderPlayer(playerKeyframe)
+    renderBush(playerVisual, bushShouldBeRendered)
     renderMapForeground(playerVisual.x, playerVisual.y)
 }
+
 
 export function renderDialogue(textBlock, isLastBlock) {
     setFont()
@@ -27,11 +33,9 @@ export function renderDialogue(textBlock, isLastBlock) {
     if (!isLastBlock) renderDialogueArrow()
 }
 
-export function renderBushLeaves(keyframes, relativeCoordinates, remainingShifts) { // TODO: needs to occur before final foreground rendering
+export function renderGrassAnimation(keyframes, relativeCoordinates, remainingShifts) { // TODO: needs to occur before final foreground rendering
     if (keyframes.length == 0) return
-    console.log(keyframes)
     
-    context.fillStyle = 'red'
     let remainingShiftsX = remainingShifts[0]
     let remainingShiftsY = remainingShifts[1]
 
@@ -42,28 +46,23 @@ export function renderBushLeaves(keyframes, relativeCoordinates, remainingShifts
         context.drawImage(
             keyframe,
             CENTER_WIDTH + coordinates[0]*SIZE - remainingShiftsX,
-            CENTER_HEIGHT - SIZE + coordinates[1]*SIZE - remainingShiftsY,
-        )
+            CENTER_HEIGHT - SIZE + coordinates[1]*SIZE - remainingShiftsY)
     }
 }
 
-export function renderMovement(playerKeyFrame, playerVisual, playerIsInBush) {
-    renderCanvasBackground() 
-    renderMapBackground(playerVisual.x, playerVisual.y)
-    renderPlayer(playerKeyFrame)
-    renderBush(playerIsInBush, playerVisual)
-    renderMapForeground(playerVisual.x, playerVisual.y)
-}
-
-function renderBush(playerIsInBush, playerVisual) {
-    if (!playerIsInBush) return
+export function renderBush(playerVisual, bushShouldBeRendered) {
+    if (!bushShouldBeRendered) return
 
     let remainingShifts = playerVisual.getRemainingShifts()
     let remainingShiftsX = remainingShifts[0]
     let remainingShiftsY = remainingShifts[1]
 
-    context.fillStyle = 'red'
     context.drawImage(grassImageFG, CENTER_WIDTH - remainingShiftsX, CENTER_HEIGHT - remainingShiftsY)
+}
+
+export function renderBackgrounds(playerVisualX, playerVisualY) {
+    renderCanvasBackground()
+    renderMapBackground(playerVisualX, playerVisualY)
 }
 
 function renderCanvasBackground() {
@@ -75,11 +74,11 @@ function renderMapBackground(x, y) {
     context.drawImage(outsideImageBG, x, y)
 }
 
-function renderMapForeground(x, y) {
+export function renderMapForeground(x, y) {
     context.drawImage(outsideImageFG, x, y)
 }
 
-function renderPlayer(playerKeyFrame) {
+export function renderPlayer(playerKeyFrame) {
     context.drawImage(playerKeyFrame, CENTER_WIDTH, CENTER_HEIGHT - SIZE/2)
 }
 

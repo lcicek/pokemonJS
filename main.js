@@ -1,4 +1,4 @@
-import { renderBushLeaves, renderDialogue, renderMovement, renderPreviousBackground, setFont } from "./modules/graphics/renderer.js";
+import { renderGrassAnimation, renderDialogue, renderPreviousBackground, setFont, renderBackgrounds, renderPlayer, renderBush, renderMapForeground, renderRegularMovement } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
@@ -16,7 +16,6 @@ import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
-import { SIZE } from "./modules/constants/graphicConstants.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
 
 let outside = new Outside()
@@ -34,21 +33,60 @@ let lock = new Lock()
 async function gameLoop(timestamp) {
     tryUpdateIntermediateState()
 
-    let acted = processInput(timestamp) // will perform locking mechanisms
+    let acted = act(timestamp) // will perform locking mechanisms
 
-    //if (bushManager.getRelativeCoordinates(player.x, player.y).length > 0) console.log(JSON.stringify(bushManager.getRelativeCoordinates(player.x, player.y)))
-
-    handleMovementRendering(acted)
-    let removed = bushManager.tryRemove()
-    if (!bushManager.isIdle() && !acted && lock.isUnlocked()) renderMovement(playerAnimation.getKeyframe(17), playerVisual, outside.isBush(player.x, player.y))
-    if (removed && bushManager.isIdle()) renderMovement(playerAnimation.getKeyframe(17), playerVisual, false)
-    renderBushLeaves(grassAnimation.getKeyframes(bushManager.getTicks()), bushManager.getRelativeCoordinates(player.x, player.y), playerVisual.getRemainingShifts())
+    handleGameRendering()
     handleDialogueRendering(acted)
-    handleBushes() 
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
+
+// rendering player/bush/leaves is quite intertwined, hence needs to be handled together
+function handleGameRendering() {
+    if (!stateManager.isInGameState()) return
+    if (lock.isUnlocked() && bushManager.isIdle()) return
+
+    // Prepare movement part //
+    if (lock.isLocked()) prepareMovementRendering() // i.e. movement is occuring and needs to be rendered
+
+    // Prepare grass animation part //
+    bushManager.tryUpdate()
+    bushManager.tryRemove()
+
+    // Render everything //
+    // case: there are no past grass animations occuring
+    let playerKeyFrame = lock.isLocked() ? playerAnimation.getKeyframe(lock.getTick()) : playerAnimation.lastKeyframe
+    let bushShouldBeRendered = outside.isBush(player.x, player.y)
+    if (bushManager.isIdle()) {
+        renderRegularMovement(playerVisual, playerKeyFrame, bushShouldBeRendered)
+
+        return
+    }
+
+    // case: there is no new movement but still old grass animations to be rendered
+    let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
+    let relativeGrassCoordinates = bushManager.getRelativeCoordinates(player.x, player.y)
+    let grassShifts = playerVisual.getRemainingShifts()
+
+    if (lock.isUnlocked()) {
+        renderPreviousBackground(playerAnimation.lastKeyframe, playerVisual, bushShouldBeRendered) // clear old grass frames by drawing previous map background over them
+        renderGrassAnimation(grassKeyframes, relativeGrassCoordinates, grassShifts)
+        renderMapForeground(playerVisual.x, playerVisual.y)
+
+        return
+    }
+
+    // case: player is moving and there are old (/new) grass animations
+    bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick()) // adjust bush rendering to movement
+
+    renderBackgrounds(playerVisual.x, playerVisual.y)
+    if (Direction.isVertical(player.direction)) renderGrassAnimation(grassKeyframes, relativeGrassCoordinates, grassShifts) // vary grass fg/bg rendering based on type of movement
+    renderPlayer(playerKeyFrame)
+    renderBush(playerVisual, bushShouldBeRendered)
+    if (Direction.isHorizontal(player.direction)) renderGrassAnimation(grassKeyframes, relativeGrassCoordinates, grassShifts)
+    renderMapForeground(playerVisual.x, playerVisual.y)
+}
 
 function tryUpdateIntermediateState() {
     if (lock.isLocked()) return
@@ -63,7 +101,7 @@ function tryUpdateIntermediateState() {
     }
 }
 
-function processInput(timestamp) {
+function act(timestamp) {
     if (lock.isLocked()) {
         lock.tick(timestamp)
         return false
@@ -75,11 +113,20 @@ function processInput(timestamp) {
     let navigated = tryMenu(activeKey, timestamp)
     let interacted = tryInteraction(activeKey, timestamp)
     let moved = tryMovement(activeKey, timestamp) // TODO: consider changing tryMovement to work even with activeKey = null
-    if (moved) tryPokemonEncounter()
+    
+    if (moved) {
+        tryPokemonEncounter()
+        tryBush()
+    }
 
     let acted = navigated || interacted || moved
-
     return acted
+}
+
+function tryBush() {    
+    if (!player.collided() && outside.isBush(player.x, player.y)) {
+        bushManager.add(player.x, player.y)
+    }
 }
 
 function tryInteraction(activeKey, timestamp) {
@@ -115,18 +162,23 @@ function tryInteraction(activeKey, timestamp) {
     return false
 }
 
-function handleBushes() {
+function handleBushRendering(acted) {
     if (!stateManager.isInGameState() || bushManager.isIdle()) return // TODO: probably reset bushes once you return from other state
 
-    bushManager.tryRemove()
     bushManager.update()
+    let removed = bushManager.tryRemove()
 
+    if (!acted && lock.isUnlocked()) renderPreviousBackground(playerAnimation.lastKeyframe, playerVisual, outside.isBush(player.x, player.y))
+    if (!removed) renderGrassAnimation(grassAnimation.getKeyframes(bushManager.getTicks()), bushManager.getRelativeCoordinates(player.x, player.y), playerVisual.getRemainingShifts(), Direction.isVertical(player.direction), playerAnimation.lastKeyframe)
+    
     console.log(JSON.stringify(bushManager.getRelativeCoordinates(player.x, player.y)))
 }
 
 function handleDialogueRendering(acted) {
     if (stateManager.isInClosingFieldState()) {
-        renderPreviousBackground(playerAnimation.getKeyframe(), playerVisual.x, playerVisual.y)
+        renderPreviousBackground(playerAnimation.lastKeyframe, playerVisual, outside.isBush(player.x, player.y))
+        renderMapForeground(playerVisual.x, playerVisual.y)
+
         return
     }
 
@@ -136,9 +188,7 @@ function handleDialogueRendering(acted) {
     renderDialogue(dialogue.getCurrentBlock(), dialogue.isLastBlock())
 }
 
-function handleMovementRendering(acted) {
-    if (!stateManager.isInGameState() || (!acted && lock.isUnlocked())) return // i.e. no new action and no past action that still needs to be rendered
-
+function prepareMovementRendering() {
     let movementBegins = lock.isFirstTick()
     let movementEnds = lock.isLastTick()
 
@@ -146,10 +196,6 @@ function handleMovementRendering(acted) {
     
     if (!movementEnds && !player.collided()) playerVisual.shiftVisual(player.direction)
     else if (movementEnds) playerVisual.ensurePositionIsNext()
-
-    let bushShouldBeRendered = outside.isBush(player.x, player.y) && (!Direction.north(player.direction) || movementEnds)
-
-    renderMovement(playerAnimation.getKeyframe(lock.getTick()), playerVisual, bushShouldBeRendered)
 }
 
 function tryMenu(activeKey, timestamp) {
@@ -196,10 +242,6 @@ function tryMovement(activeKey, timestamp) {
         playerAnimation.setKeyframeCycle(player.direction)
         playerAnimation.toggleStep()
         lock.lock(framesPerMovement, timestamp)
-
-        if (!player.collided() && outside.isBush(player.x, player.y)) {
-            bushManager.add(player.x, player.y)
-        }
     }
 
     return moved
@@ -208,7 +250,7 @@ function tryMovement(activeKey, timestamp) {
 window.onload = function() {
     addInputDetection()
     setFont()
-    renderMovement(playerAnimation.getKeyframe(17), playerVisual, false) // initial render
+    renderRegularMovement(playerVisual, playerAnimation.lastKeyframe) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)
