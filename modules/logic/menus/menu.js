@@ -28,7 +28,6 @@ class MenuInterface {
 }
 
 class ColumnMenuInterface extends MenuInterface {
-    
     navigate(input) {
         let down = dir.south(input)
         let up = dir.north(input)

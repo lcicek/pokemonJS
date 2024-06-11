@@ -21,6 +21,7 @@ import { RC } from "./modules/constants/renderComponents.js";
 import { Collectable } from "./modules/logic/objects/interactable.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
 import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
+import { trainerIsEncountered } from "./modules/constants/trainers.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -98,6 +99,12 @@ function renderGame(...renderComponents) {
     }
 }
 
+function tryTrainerEncounter() {
+    if (trainerIsEncountered(player.x, player.y)) {
+        stateManager.setState(State.AwaitingEncounter)
+    }
+}
+
 function tryUpdateIntermediateState() {
     if (lock.isLocked()) return
 
@@ -127,6 +134,7 @@ function act(timestamp) {
     if (moved) {
         tryPokemonEncounter()
         tryBush()
+        tryTrainerEncounter()
     }
 
     let acted = navigated || interacted || moved
@@ -154,7 +162,7 @@ function tryInteraction(activeKey, timestamp) {
             target.collect()
             outside.removeCollision(targetX, targetY)
             bag.add(target)
-        } else if (target.wasCollected()) {
+        } else if (target instanceof Collectable) {
             return
         }
         
