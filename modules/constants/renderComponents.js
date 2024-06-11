@@ -3,5 +3,6 @@ export const RC = {
     Player: 1,
     Bush: 2,
     Leaves: 3,
-    Foreground: 4
+    Foreground: 4,
+    Interactables: 5
 }

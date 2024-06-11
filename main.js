@@ -1,4 +1,4 @@
-import { renderGrassAnimation, renderDialogue, renderPreviousBackground, setFont, renderBackgrounds, renderPlayer, renderBush, renderMapForeground, renderRegularMovement } from "./modules/graphics/renderer.js";
+import { Renderer } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
@@ -10,7 +10,7 @@ import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Action } from "./modules/constants/action.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
-import { interactables } from "./modules/constants/interactables.js";
+import { getInteractablesForRendering, tryGettingInteractable } from "./modules/constants/interactables.js";
 import { framesPerClosingField, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
@@ -34,6 +34,7 @@ let bushManager = new BushManager()
 let grassAnimation = new GrassAnimation()
 let lock = new Lock()
 let bag = new Bag()
+let renderer = new Renderer()
 
 async function gameLoop(timestamp) {
     tryUpdateIntermediateState()
@@ -71,12 +72,12 @@ function handleGameRendering() {
     prepareGameRendering()
 
     if (bushManager.isIdle()) { // case: no grass animations occuring
-        renderGame(RC.Background, RC.Player, RC.Bush, RC.Foreground)
+        renderGame(RC.Player, RC.Bush)
         return
     }
 
-    if (Direction.isVertical(player.direction)) renderGame(RC.Background, RC.GrassAnimation, RC.Player, RC.Bush, RC.Foreground)
-    else renderGame(RC.Background, RC.Player, RC.Bush, RC.GrassAnimation, RC.Foreground)
+    if (Direction.isVertical(player.direction)) renderGame(RC.GrassAnimation, RC.Player, RC.Bush)
+    else renderGame(RC.Player, RC.Bush, RC.GrassAnimation)
 }
 
 
@@ -85,18 +86,20 @@ function renderGame(...renderComponents) {
     
     let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
     let relativeGrassCoordinates = bushManager.getRelativeCoordinates(player.x, player.y)
-    let grassShifts = playerVisual.getRemainingShifts()
-    
     let bushShouldBeRendered = outside.isBush(player.x, player.y)
+
+    renderer.setShift(playerVisual.getRemainingShifts())
     if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
     
+    // always render backgrounds, interactables and foregrounds regardless of provided components:
+    renderer.backgrounds(playerVisual.x, playerVisual.y)
+    renderer.interactables(getInteractablesForRendering(player.x, player.y))
     for (let rc of renderComponents) {
-        if (rc == RC.Background) renderBackgrounds(playerVisual.x, playerVisual.y)
-        else if (rc == RC.Player) renderPlayer(playerKeyframe)
-        else if (rc == RC.Bush) renderBush(playerVisual, bushShouldBeRendered)
-        else if (rc == RC.GrassAnimation && grassKeyframes.length != 0) renderGrassAnimation(grassKeyframes, relativeGrassCoordinates, grassShifts)
-        else if (rc == RC.Foreground) renderMapForeground(playerVisual.x, playerVisual.y)
+        if (rc == RC.Player) renderer.player(playerKeyframe)
+        else if (rc == RC.Bush && bushShouldBeRendered) renderer.bush()
+        else if (rc == RC.GrassAnimation && grassKeyframes.length != 0) renderer.grassAnimation(grassKeyframes, relativeGrassCoordinates)
     }
+    renderer.mapForeground(playerVisual.x, playerVisual.y)
 }
 
 function tryTrainerEncounter() {
@@ -152,18 +155,14 @@ function tryInteraction(activeKey, timestamp) {
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
-        let coordinate = [targetX, targetY].toString() // TODO: consider changing approach
-
-        if (!interactables.has(coordinate)) return false
-
-        let target = interactables.get(coordinate)
+        let target = tryGettingInteractable(targetX, targetY)
         
-        if (target instanceof Collectable && !target.wasCollected()) {
+        if (target == null) return false
+
+        if (target instanceof Collectable) {
             target.collect()
             outside.removeCollision(targetX, targetY)
             bag.add(target)
-        } else if (target instanceof Collectable) {
-            return
         }
         
         dialogue.setText(target.text)
@@ -190,16 +189,14 @@ function tryInteraction(activeKey, timestamp) {
 
 function handleDialogueRendering(acted) {
     if (stateManager.isInClosingFieldState()) {
-        renderPreviousBackground(playerAnimation.lastKeyframe, playerVisual, outside.isBush(player.x, player.y))
-        renderMapForeground(playerVisual.x, playerVisual.y)
-
+        renderGame(RC.Player, RC.Bush)
         return
     }
 
     if (!stateManager.isInInteractionState()) return
     if (stateManager.isInInteractionState && !acted) return
 
-    renderDialogue(dialogue.getCurrentBlock(), dialogue.isLastBlock())
+    renderer.dialogue(dialogue.getCurrentBlock(), dialogue.isLastBlock())
 }
 
 function tryMenu(activeKey, timestamp) {
@@ -261,8 +258,8 @@ function tryMovement(activeKey, timestamp) {
 
 window.onload = function() {
     addInputDetection()
-    setFont()
-    renderRegularMovement(playerVisual, playerAnimation.lastKeyframe) // initial render
+    renderer.initialize()
+    renderGame(RC.Player, RC.Bush) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)

@@ -36,3 +36,9 @@ g7.src = "./assets/background-sprites/g7.png"
 
 export const g8 = new Image()
 g8.src = "./assets/background-sprites/g8.png"
+
+export const sign = new Image()
+sign.src = "./assets/background-sprites/sign.png"
+
+export const pokeball = new Image()
+pokeball.src = "./assets/background-sprites/pokeball.png"
