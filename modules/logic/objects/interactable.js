@@ -13,11 +13,16 @@ export class Sign extends InteractableInterface {
 export class Collectable extends InteractableInterface {
     constructor(collectableName) {
         super("You found one " + collectableName + ".")
+        this.name = collectableName
 
         this.collected = false
     }
 
     collect() {
         this.collected = true
+    }
+
+    wasCollected() {
+        return this.collected
     }
 }

@@ -29,8 +29,6 @@ class NavigatorInterface {
         else if (input === Action.A) this.nextMenu()
         else navigated = false
 
-        this.setDisplay() // technically, display is set one frame late.
-
         return navigated
     }
 

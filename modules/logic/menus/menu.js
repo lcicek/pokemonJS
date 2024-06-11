@@ -28,6 +28,7 @@ class MenuInterface {
 }
 
 class ColumnMenuInterface extends MenuInterface {
+    
     navigate(input) {
         let down = dir.south(input)
         let up = dir.north(input)
@@ -80,19 +81,21 @@ export class PokemonMenu extends MenuInterface {
 }
 
 export class BagMenu extends ColumnMenuInterface {
-
     constructor() {
         super([])
+        this.bagDisplay = document.getElementById("bagDisplay")
     }
 
-    add(item) {
-        this.items.add(item) // TODO: should be push perhaps
-        this.length++;
+    setItems(bagContents) {
+        this.items = bagContents
+        this.length = bagContents.length
+        this.index = 0
     }
 
-    remove(item) {
-        this.items.remove(item) // TODO: check for correctness
-        this.length--;
+    getSelected() {
+        if (!this.hasItems()) return
+
+        return this.items[this.index].name
     }
 }
 

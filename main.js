@@ -17,7 +17,10 @@ import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
-import { RC } from "./modules/logic/main-game/renderComponents.js";
+import { RC } from "./modules/constants/renderComponents.js";
+import { Collectable } from "./modules/logic/objects/interactable.js";
+import { Bag } from "./modules/logic/main-game/bag.js";
+import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -28,8 +31,8 @@ let menuNavigator;
 let dialogue = new Dialogue()
 let bushManager = new BushManager()
 let grassAnimation = new GrassAnimation()
-
 let lock = new Lock()
+let bag = new Bag()
 
 async function gameLoop(timestamp) {
     tryUpdateIntermediateState()
@@ -66,21 +69,15 @@ function handleGameRendering() {
 
     prepareGameRendering()
 
-    if (bushManager.isIdle()) { // case: player moves but there are no past grass animations occuring
+    if (bushManager.isIdle()) { // case: no grass animations occuring
         renderGame(RC.Background, RC.Player, RC.Bush, RC.Foreground)
         return
     }
 
-    if (lock.isUnlocked()) { // case: there is no new movement but still old grass animations to be rendered
-        renderPreviousBackground(playerAnimation.lastKeyframe, playerVisual, outside.isBush(player.x, player.y)) // clear old grass frames by drawing previous map background over them
-        renderGame(RC.GrassAnimation, RC.Foreground)
-        return
-    }
-
-    // case: player moves and there are grass animations to be rendered    
-    if (Direction.isHorizontal(player.direction)) renderGame(RC.Background, RC.Player, RC.Bush, RC.GrassAnimation, RC.Foreground)
-    else renderGame(RC.Background, RC.GrassAnimation, RC.Player, RC.Bush, RC.Foreground)
+    if (Direction.isVertical(player.direction)) renderGame(RC.Background, RC.GrassAnimation, RC.Player, RC.Bush, RC.Foreground)
+    else renderGame(RC.Background, RC.Player, RC.Bush, RC.GrassAnimation, RC.Foreground)
 }
+
 
 function renderGame(...renderComponents) {
     let playerKeyframe = lock.isLocked() ? playerAnimation.getKeyframe(lock.getTick()) : playerAnimation.lastKeyframe
@@ -147,11 +144,19 @@ function tryInteraction(activeKey, timestamp) {
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
-        let coordinate = "" + targetX + targetY // TODO: consider changing approach
+        let coordinate = [targetX, targetY].toString() // TODO: consider changing approach
 
         if (!interactables.has(coordinate)) return false
 
         let target = interactables.get(coordinate)
+        
+        if (target instanceof Collectable && !target.wasCollected()) {
+            target.collect()
+            outside.removeCollision(targetX, targetY)
+            bag.add(target)
+        } else if (target.wasCollected()) {
+            return
+        }
         
         dialogue.setText(target.text)
 
@@ -202,7 +207,15 @@ function tryMenu(activeKey, timestamp) {
     }
 
     // case: menu is open
+    let gameMenuWasOpen = menuNavigator.getActive() instanceof GameMenu
     let navigated = menuNavigator.update(activeKey) // case: user initiated navigation in menu
+    let bagMenuWasOpened = navigated && gameMenuWasOpen && menuNavigator.getActive() instanceof BagMenu
+
+    if (bagMenuWasOpened) {
+        menuNavigator.getActive().setItems(bag.contents)
+    }
+
+    menuNavigator.setDisplay()
 
     if (menuNavigator.isClosed()) { // case: user closed menu
         stateManager.setState(State.ClosingField)
