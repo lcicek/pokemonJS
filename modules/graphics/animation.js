@@ -1,5 +1,7 @@
 import { f, fr, fl, b, br, bl, r, rr, rl, l, lr, ll } from "../loaders/image-loaders/characterImages.js";
-import { g1, g2, g3, g4, g5, g6, g7, g8 } from "../loaders/image-loaders/backgroundImages.js";
+import { g1, g6, g7, g8 } from "../loaders/image-loaders/backgroundImages.js";
+import { vegetaF, vegetaFR, vegetaFL } from "../loaders/image-loaders/trainerImages.js";
+
 import { Direction } from "../logic/main-game/direction.js";
 import { ticksPerGrassKeyframe, ticksPerMovementKeyframe } from "../constants/timeConstants.js";
 
@@ -34,17 +36,41 @@ export class GrassAnimation extends Animation {
     }
 }
 
-export class PlayerAnimation extends Animation {
+class CharacterAnimation extends Animation {
+    constructor(keyframes, initialKeyframe) {
+        super(keyframes, ticksPerMovementKeyframe)
+        this.step = 1
+        this.lastKeyframe = initialKeyframe
+    }
+
+    toggleStep() {
+        this.step ^= 1
+    }
+
+    getKeyframe(tick) {
+        if (tick == undefined) return this.lastKeyframe
+
+        let keyframe = this.keyframes[this.indexOfKeyframe(tick)][this.step]
+        this.lastKeyframe = keyframe
+
+        return keyframe
+    }
+}
+
+export class TrainerAnimation extends CharacterAnimation {
+    constructor(keyframes, initialKeyframe) {
+        super(keyframes, initialKeyframe)
+    }
+}
+
+export class PlayerAnimation extends CharacterAnimation {
     constructor() {
         super([[[fr, f], [fl, f]],
-                [[br, b], [bl, b]],
-                [[rr, r], [rl, r]],
-                [[lr, l], [ll, l]]], ticksPerMovementKeyframe)
+               [[br, b], [bl, b]],
+               [[rr, r], [rl, r]],
+               [[lr, l], [ll, l]]], f)
 
-        // these variables are set so that the animation initially points to 'f'
         this.currentCycleIndex = 0
-        this.step = 1
-        this.lastKeyframe = f
     }
 
     setKeyframeCycle(direction) {
@@ -59,11 +85,9 @@ export class PlayerAnimation extends Animation {
         this.currentCycleIndex = index
     }
 
-    toggleStep() {
-        this.step ^= 1
-    }
-
     getKeyframe(tick) {
+        if (tick == undefined) return this.lastKeyframe
+        
         let keyframe = this.keyframes[this.currentCycleIndex][this.step][this.indexOfKeyframe(tick)]
         this.lastKeyframe = keyframe
 

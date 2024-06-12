@@ -10,7 +10,7 @@ import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Action } from "./modules/constants/action.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
-import { getInteractablesForRendering, tryGettingInteractable } from "./modules/constants/interactables.js";
+import { getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
 import { framesPerClosingField, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
@@ -18,10 +18,9 @@ import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
 import { RC } from "./modules/constants/renderComponents.js";
-import { Collectable } from "./modules/logic/objects/interactable.js";
+import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
 import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
-import { trainerIsEncountered } from "./modules/constants/trainers.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -42,11 +41,18 @@ async function gameLoop(timestamp) {
     let acted = act(timestamp) // will perform locking mechanisms
 
     handleGameRendering()
+    handleTrainerEncounterRendering()
     handleDialogueRendering(acted)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
+
+function handleTrainerEncounterRendering() {
+    if (!stateManager.isInTrainerEncounterState()) return
+
+
+}
 
 function prepareGameRendering() {
     // prepare player/movement rendering:
@@ -66,7 +72,7 @@ function prepareGameRendering() {
 }
 
 function handleGameRendering() {
-    if (!stateManager.isInGameState()) return
+    if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter()) return
     if (lock.isUnlocked() && bushManager.isIdle()) return
 
     prepareGameRendering()
@@ -82,7 +88,7 @@ function handleGameRendering() {
 
 
 function renderGame(...renderComponents) {
-    let playerKeyframe = lock.isLocked() ? playerAnimation.getKeyframe(lock.getTick()) : playerAnimation.lastKeyframe
+    let playerKeyframe = playerAnimation.getKeyframe(lock.getTick())
     
     let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
     let relativeGrassCoordinates = bushManager.getRelativeCoordinates(player.x, player.y)
@@ -91,9 +97,9 @@ function renderGame(...renderComponents) {
     renderer.setShift(playerVisual.getRemainingShifts())
     if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
     
-    // always render backgrounds, interactables and foregrounds regardless of provided components:
+    // always render backgrounds, game objects and foregrounds regardless of provided components:
     renderer.backgrounds(playerVisual.x, playerVisual.y)
-    renderer.interactables(getInteractablesForRendering(player.x, player.y))
+    renderer.gameObjects(getGameObjectsForRendering(player.x, player.y, lock.getTick()))
     for (let rc of renderComponents) {
         if (rc == RC.Player) renderer.player(playerKeyframe)
         else if (rc == RC.Bush && bushShouldBeRendered) renderer.bush()
@@ -104,7 +110,7 @@ function renderGame(...renderComponents) {
 
 function tryTrainerEncounter() {
     if (trainerIsEncountered(player.x, player.y)) {
-        stateManager.setState(State.AwaitingEncounter)
+        stateManager.setState(State.AwaitingTrainerEncounter)
     }
 }
 
@@ -118,6 +124,12 @@ function tryUpdateIntermediateState() {
 
     if (stateManager.isInClosingFieldState()) {
         stateManager.setState(State.Game)
+        return
+    }
+
+    if (stateManager.isAwaitingTrainerEncounter()) {
+        stateManager.setState(State.TrainerEncounter)
+        return
     }
 }
 
@@ -155,7 +167,7 @@ function tryInteraction(activeKey, timestamp) {
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
-        let target = tryGettingInteractable(targetX, targetY)
+        let target = tryGettingGameObject(targetX, targetY)
         
         if (target == null) return false
 

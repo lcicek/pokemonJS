@@ -4,5 +4,5 @@ export const RC = {
     Bush: 2,
     Leaves: 3,
     Foreground: 4,
-    Interactables: 5
+    GameObjects: 5
 }

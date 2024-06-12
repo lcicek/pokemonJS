@@ -32,6 +32,18 @@ export class StateManager {
         return this.state == State.AwaitingEncounter
     }
 
+    isInTrainerEncounterState() {
+        return this.state == State.TrainerEncounter
+    }
+
+    isAwaitingTrainerEncounter() {
+        return this.state == State.AwaitingTrainerEncounter
+    }
+
+    isAwaitingAnyEncounter() {
+        return this.isAwaitingEncounter() || this.isAwaitingTrainerEncounter()
+    }
+
     isInClosingFieldState() {
         return this.state == State.ClosingField
     }

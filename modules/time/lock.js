@@ -1,7 +1,7 @@
 import { timePerFrameMS } from "../constants/timeConstants.js"
 
 export class Lock {
-    currentTick = 0
+    currentTick = undefined
     endTick = undefined
     duration = undefined
     starTime = undefined

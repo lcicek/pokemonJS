@@ -27,8 +27,8 @@ export class Renderer {
         this.context.font = "16px dialogue"
     }
 
-    interactables(interactables) {
-        for (let data of interactables) {
+    gameObjects(gameObjectData) {
+        for (let data of gameObjectData) {
             let img = data[0]
             let x = data[1][0]
             let y = data[1][1]
