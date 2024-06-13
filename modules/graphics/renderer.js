@@ -4,7 +4,6 @@ import { outsideImageBG, outsideImageFG, dialogueBoxImage, downArrowImage, grass
 export class Renderer {
 
     Renderer() {
-
     }
 
     initialize() {

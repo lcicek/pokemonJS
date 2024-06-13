@@ -11,16 +11,17 @@ import { State } from "./modules/logic/state/state.js";
 import { Action } from "./modules/constants/action.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
 import { getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
-import { framesPerClosingField, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
+import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
-import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
+import { FightMarkAnimation, GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
 import { RC } from "./modules/constants/renderComponents.js";
 import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
 import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
+import { Animator } from "./modules/graphics/animator.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -31,9 +32,13 @@ let menuNavigator;
 let dialogue = new Dialogue()
 let bushManager = new BushManager()
 let grassAnimation = new GrassAnimation()
+let fightMarkAnimation = new FightMarkAnimation()
 let lock = new Lock()
 let bag = new Bag()
 let renderer = new Renderer()
+let animator = new Animator()
+
+let activeTrainer // TODO: change 
 
 async function gameLoop(timestamp) {
     tryUpdateIntermediateState()
@@ -51,7 +56,19 @@ async function gameLoop(timestamp) {
 function handleTrainerEncounterRendering() {
     if (!stateManager.isInTrainerEncounterState()) return
 
+    if (animator.isIdle()) {
+        animator.setAnimation()
+    }
+    else if (!animator.isFinished()) animator.animate()
+    
+    if (animator.isFinished()) {
+        animator.reset()
+        stateManager.setState(State.TrainerFight)
+        return
+    }
 
+    activeTrainer.walk()
+    
 }
 
 function prepareGameRendering() {
@@ -109,8 +126,15 @@ function renderGame(...renderComponents) {
 }
 
 function tryTrainerEncounter() {
-    if (trainerIsEncountered(player.x, player.y)) {
+    let trainer = trainerIsEncountered(player.x, player.y)
+
+    if (trainer != null) {
         stateManager.setState(State.AwaitingTrainerEncounter)
+        
+        animator.addAnimation(fightMarkAnimation, framesPerFightMark)
+        animator.addAnimation(trainer.animation, framesPerMovement * trainer.distanceToPlayer(player.x, player.y))
+    
+        activeTrainer = trainer
     }
 }
 

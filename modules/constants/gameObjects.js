@@ -6,10 +6,10 @@ export function trainerIsEncountered(x, y) {
     for (let trainer of trainers) {
         if (!trainer.isInView(x, y)) continue
 
-        if (trainer.isEncountered(x, y)) return true
+        if (trainer.isEncountered(x, y)) return trainer
     }
 
-    return false
+    return null
 }
 
 export function tryGettingGameObject(x, y) {
@@ -33,7 +33,7 @@ export function getGameObjectsForRendering(playerX, playerY, tick) {
 
         if (object instanceof Sign) data.push([sign, object.getCanvasPosition(playerX, playerY)])
         else if (object instanceof Collectable && !object.wasCollected()) data.push([pokeball, object.getCanvasPosition(playerX, playerY)])
-        else if (object instanceof Trainer) data.push([object.animation.getKeyframe(tick), object.getCanvasPosition(playerX, playerY)])
+        else if (object instanceof Trainer && object.isStill()) data.push([object.animation.getKeyframe(tick), object.getCanvasPosition(playerX, playerY)])
         
     }
 

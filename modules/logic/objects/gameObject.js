@@ -49,8 +49,21 @@ export class Trainer extends GameObject {
         
         this.direction = direction
         this.encounterCoordinates = encounterCoordinates
+        this.still = true
         this.fought = false
         this.animation = new TrainerAnimation(keyframes, initialKeyframe) // TODO: consider design that decouples trainer logic from animation
+    }
+
+    isStill() {
+        return this.still
+    }
+
+    walk() {
+        this.still = false
+    }
+
+    distanceToPlayer(playerX, playerY) {
+        return Math.abs(playerX - this.x + playerY - this.y) - 1
     }
 
     isEncountered(x, y) {
