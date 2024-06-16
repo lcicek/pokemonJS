@@ -1,6 +1,8 @@
+import { framesPerMovement } from "../constants/timeConstants.js"
 import { Lock } from "../time/lock.js"
+import { CharacterAnimation } from "./animation.js"
 
-export class Animator {
+export class AnimationQueue {
     constructor() {
         this.animations = []
         this.durations = []
@@ -25,7 +27,10 @@ export class Animator {
 
     animate() {
         if (this.idle) return
-        if (this.lock.isLocked()) this.lock.tick()
+        if (this.lock.isLocked()) {
+            if (this.animation instanceof CharacterAnimation && (this.lock.getTick() - 1) % framesPerMovement == 0) this.animation.toggleStep() 
+            this.lock.tick()
+        }
         if (this.lock.isLocked()) return // special case where we need to check if the last tick has unlocked the lock
         
         if (this.animations.length > 0) this.setAnimation()
@@ -48,7 +53,7 @@ export class Animator {
 
     getTick() {
         if (this.isIdle()) return undefined
-        
+
         return this.lock.getTick()
     }
 

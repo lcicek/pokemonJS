@@ -10,7 +10,7 @@ import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Action } from "./modules/constants/action.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
-import { getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
+import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
 import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
@@ -21,7 +21,7 @@ import { RC } from "./modules/constants/renderComponents.js";
 import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
 import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
-import { Animator } from "./modules/graphics/animator.js";
+import { AnimationQueue } from "./modules/graphics/animationQueue.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -36,7 +36,7 @@ let fightMarkAnimation = new FightMarkAnimation()
 let lock = new Lock()
 let bag = new Bag()
 let renderer = new Renderer()
-let animator = new Animator()
+let animationQueue = new AnimationQueue()
 
 let activeTrainer // TODO: change 
 
@@ -56,37 +56,38 @@ async function gameLoop(timestamp) {
 function handleTrainerEncounterRendering(timestamp) {
     if (!stateManager.isInTrainerEncounterState()) return false
 
-    if (animator.isIdle()) animator.setAnimation()
-    else animator.animate()
+    if (animationQueue.isIdle()) animationQueue.setAnimation()
+    else animationQueue.animate()
     
-    if (animator.isFinished()) {
-        animator.reset()
+    if (animationQueue.isFinished()) {
+        animationQueue.reset()
         // stateManager.setState(State.TrainerFight) // TODO: implement state queue of some kind
 
         dialogue.setText(activeTrainer.text)
         stateManager.setState(State.Interaction)
         lock.lock(framesPerNavigation, timestamp)
         
+        outside.addCollision(activeTrainer.tmpX, activeTrainer.tmpY)
         return true
     }
 
-    if (animator.isFinalAnimation()) { // TODO: define clear semantics between animator and trainer encounter
+    if (animationQueue.isFinalAnimation()) { // TODO: define clear semantics between animationQueue and trainer encounter
         activeTrainer.walk() // TODO: only needs to be called once
 
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
         let shifts = Direction.toDeltas(activeTrainer.direction)
         
-        let tick = animator.getTick()
+        let tick = animationQueue.getTick()
         shifts[0] *= tick
         shifts[1] *= tick
 
-        renderer.walkingTrainer(animator.getKeyframe(), canvasPosition[0], canvasPosition[1], shifts)
+        renderer.walkingTrainer(animationQueue.getKeyframe(), canvasPosition[0], canvasPosition[1], shifts)
     } else {
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
-        renderer.fightMark(animator.getKeyframe(), canvasPosition[0], canvasPosition[1] - 1)
+        renderer.fightMark(animationQueue.getKeyframe(), canvasPosition[0], canvasPosition[1] - 1)
     }
 
-    if (animator.isFinalAnimationFrame()) activeTrainer.stand()
+    if (animationQueue.isFinalAnimationFrame()) activeTrainer.stand()
 
     return false
 }
@@ -110,7 +111,7 @@ function prepareGameRendering() {
 
 function handleGameRendering() {
     if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter() && !stateManager.isInTrainerEncounterState()) return
-    if (lock.isUnlocked() && bushManager.isIdle() && animator.isIdle()) return
+    if (lock.isUnlocked() && bushManager.isIdle() && animationQueue.isIdle()) return
 
     prepareGameRendering()
 
@@ -136,12 +137,15 @@ function renderGame(...renderComponents) {
     
     // always render backgrounds, game objects and foregrounds regardless of provided components:
     renderer.backgrounds(playerVisual.x, playerVisual.y)
-    renderer.gameObjects(getGameObjectsForRendering(player.x, player.y, lock.getTick()))
+    let [backgroundGameObjects, foregroundGameObjects] = getGameObjectsForRendering(player.x, player.y)
+    
+    if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
     for (let rc of renderComponents) {
         if (rc == RC.Player) renderer.player(playerKeyframe)
         else if (rc == RC.Bush && bushShouldBeRendered) renderer.bush()
         else if (rc == RC.GrassAnimation && grassKeyframes.length != 0) renderer.grassAnimation(grassKeyframes, relativeGrassCoordinates)
     }
+    if (foregroundGameObjects.length > 0) renderer.gameObjects(foregroundGameObjects)
     renderer.mapForeground(playerVisual.x, playerVisual.y)
 }
 
@@ -151,10 +155,12 @@ function tryTrainerEncounter() {
     if (trainer != null) {
         stateManager.setState(State.AwaitingTrainerEncounter)
         
-        animator.addAnimation(fightMarkAnimation, framesPerFightMark)
-        animator.addAnimation(trainer.animation, framesPerMovement * trainer.setNextPosition(player.x, player.y))
+        animationQueue.addAnimation(fightMarkAnimation, framesPerFightMark)
+        animationQueue.addAnimation(trainer.animation, framesPerMovement * trainer.setNextPosition(player.x, player.y))
     
         activeTrainer = trainer
+        trainer.wasEncountered()
+        outside.removeCollision(activeTrainer.x, activeTrainer.y)
     }
 }
 
@@ -314,6 +320,10 @@ function tryMovement(activeKey, timestamp) {
 
 window.onload = function() {
     addInputDetection()
+
+    let collisionCoordinates = getGameObjectCollisions()
+    outside.addCollisions(collisionCoordinates)
+
     renderer.initialize()
     renderGame(RC.Player, RC.Bush) // initial render
 

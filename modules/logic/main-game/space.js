@@ -21,18 +21,44 @@ class SpaceInterface {
     removeCollision(x, y) {
         this.collisionMap[y][x] = 0
     }
+
+    addCollisions(collisionCoordinates) {
+        for (let coordinate of collisionCoordinates) {
+            let x = coordinate[0]
+            let y = coordinate[1]
+
+            if (this.collisionMap[y][x] == 1) console.log("Warning: Game Object Collision was set at an already solid coordinate.")
+            
+            this.collisionMap[y][x] = 1
+        }
+    }
+
+    addCollision(x, y) {
+        this.collisionMap[y][x] = 1
+    }
+
+    temporarilyRemoveCollision(x, y) {
+        this.collisionMap[y][x] = 0
+        this.collisionsToReadd.push([x, y])
+    }
+
+    refresh() {
+
+    }
 }
 
 export class Outside extends SpaceInterface {
     constructor() {
         super(15, 15)
 
+        this.collisionsToReadd = []
+
         this.collisionMap = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
             [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],

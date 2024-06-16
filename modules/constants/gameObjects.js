@@ -24,18 +24,35 @@ export function tryGettingGameObject(x, y) {
     return null
 }
 
-export function getGameObjectsForRendering(playerX, playerY, tick) {
+export function getGameObjectCollisions() {
     let gameObjects = interactables.concat(trainers)
-    let data = []
+    let coordinates = []
+    
+    for (let object of gameObjects) {
+        if (object instanceof Collectable && object.wasCollected()) continue
+        coordinates.push([object.x, object.y])
+    }
+
+    return coordinates
+}
+
+export function getGameObjectsForRendering(playerX, playerY) {
+    let gameObjects = interactables.concat(trainers)
+    let backgroundObjects = []
+    let foregroundObjects = []
     
     for (let object of gameObjects) {
         if (!object.isInView(playerX, playerY)) continue
 
-        if (object instanceof Sign) data.push([sign, object.getCanvasPosition(playerX, playerY)])
-        else if (object instanceof Collectable && !object.wasCollected()) data.push([pokeball, object.getCanvasPosition(playerX, playerY)])
-        else if (object instanceof Trainer && object.isStill()) data.push([object.animation.getKeyframe(tick), object.getCanvasPosition(playerX, playerY)])
-        
+        let data = []
+
+        if (object instanceof Sign) data = [sign, object.getCanvasPosition(playerX, playerY)]
+        else if (object instanceof Collectable && !object.wasCollected()) data = [pokeball, object.getCanvasPosition(playerX, playerY)]
+        else if (object instanceof Trainer && object.isStill()) data = [object.animation.lastKeyframe, object.getCanvasPosition(playerX, playerY)]
+
+        if (data.length > 0 && object.isInForeground(playerY)) foregroundObjects.push(data)
+        else if (data.length > 0) backgroundObjects.push(data)
     }
 
-    return data
+    return [backgroundObjects, foregroundObjects]
 }

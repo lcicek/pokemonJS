@@ -9,6 +9,10 @@ class GameObject {
         this.text = text
     }
 
+    isInForeground(playerY) {
+        return this.y > playerY
+    }
+
     isInView(playerX, playerY) {
         let [canvasX, canvasY] = this.getCanvasPosition(playerX, playerY)
         return -1 <= canvasX && canvasX <= WIDTH+1 && -1 <= canvasY && canvasY <= HEIGHT+1 // add a margin of -1/+1 so object doesnt get cut out when it's moving out of frame
@@ -50,11 +54,19 @@ export class Trainer extends GameObject {
         
         this.nextX = undefined
         this.nextY = undefined
+
+        this.tmpX = undefined
+        this.tmpY = undefined
+
         this.direction = direction
         this.encounterCoordinates = encounterCoordinates
         this.still = true
-        this.fought = false
+        this.encountered = false
         this.animation = new TrainerAnimation(keyframes, initialKeyframe) // TODO: consider design that decouples trainer logic from animation
+    }
+
+    isInForeground(playerY) {
+        return this.getY() > playerY
     }
 
     isStill() {
@@ -67,30 +79,35 @@ export class Trainer extends GameObject {
 
     stand() {
         this.still = true
-        this.x = this.nextX
-        this.y = this.nextY
+        this.tmpX = this.nextX
+        this.tmpY = this.nextY
 
         this.nextX = undefined
         this.nextY = undefined
     }
 
     setNextPosition(playerX, playerY) {
-        let distanceX = Math.abs(playerX - this.x)
-        let distanceY = Math.abs(playerY - this.y)
+        let distanceX = Math.abs(playerX - this.getX())
+        let distanceY = Math.abs(playerY - this.getY())
         
         if (Direction.isVertical(this.direction)) distanceY--
         else distanceX--
         
         let totalDistance = distanceX + distanceY
 
-        this.nextX = this.x + distanceX
-        this.nextY = this.y + distanceY
+        this.nextX = this.getX() + distanceX
+        this.nextY = this.getY() + distanceY
         
         return totalDistance
     }
 
+    resetPosition() {
+        this.tmpX = undefined
+        this.tmpY = undefined
+    }
+
     isEncountered(x, y) {
-        if (this.fought) return false
+        if (this.encountered) return false
 
         for (let coordinate of this.encounterCoordinates) {
             if (coordinate[0] == x && coordinate[1] == y) return true
@@ -99,14 +116,22 @@ export class Trainer extends GameObject {
         return false
     }
 
-    wasFought() {
-        this.fought = true
+    wasEncountered() {
+        this.encountered = true
     }
 
     getCanvasPosition(playerX, playerY) {
-        let relativeX = playerX - this.x
-        let relativeY = playerY - this.y
+        let relativeX = playerX - this.getX()
+        let relativeY = playerY - this.getY()
         
         return [NORMALIZE_X - relativeX, NORMALIZE_Y - relativeY - 0.5] // -0.5 because trainer sprites are 32x48 large
+    }
+
+    getX() {
+        return this.tmpX == undefined ? this.x : this.tmpX
+    }
+
+    getY() {
+        return this.tmpY == undefined ? this.y : this.tmpY
     }
 }

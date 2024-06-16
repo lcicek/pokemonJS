@@ -17,7 +17,6 @@ class Animation {
     }
 
     indexOfKeyframe(tick) {
-        console.log(tick, this.keyframes.length, this.ticksPerKeyframe)
         return Math.floor((tick-1) / this.ticksPerKeyframe)
     }
 }
@@ -44,7 +43,7 @@ export class GrassAnimation extends Animation {
     }
 }
 
-class CharacterAnimation extends Animation {
+export class CharacterAnimation extends Animation {
     constructor(keyframes, initialKeyframe) {
         super(keyframes, ticksPerMovementKeyframe)
         this.step = 1
@@ -63,7 +62,7 @@ class CharacterAnimation extends Animation {
     getKeyframe(tick) {
         if (tick == undefined) return this.lastKeyframe
 
-        let keyframe = this.keyframes[this.indexOfKeyframe(tick)][this.step]
+        let keyframe = this.keyframes[this.step][this.indexOfKeyframe(tick)]
         this.lastKeyframe = keyframe
 
         return keyframe
