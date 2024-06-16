@@ -25,15 +25,12 @@ export class Animator {
 
     animate() {
         if (this.idle) return
+        if (this.lock.isLocked()) this.lock.tick()
+        if (this.lock.isLocked()) return // special case where we need to check if the last tick has unlocked the lock
         
-        if (this.lock.isLocked()) {
-            this.lock.tick()
-            return
-        }
-
         if (this.animations.length > 0) this.setAnimation()
         else this.finished = true
-        
+               
     }
 
     reset() {
@@ -44,7 +41,15 @@ export class Animator {
     }
 
     getKeyframe() {
+        if (this.isIdle()) return undefined
+
         return this.animation.getKeyframe(this.lock.getTick())
+    }
+
+    getTick() {
+        if (this.isIdle()) return undefined
+        
+        return this.lock.getTick()
     }
 
     isIdle() {
@@ -53,5 +58,13 @@ export class Animator {
 
     isFinished() {
         return this.finished
+    }
+
+    isFinalAnimationFrame() {
+        return this.lock.isLastTick() && this.animations.length == 0
+    }
+
+    isFinalAnimation() {
+        return this.animation && this.animations.length == 0
     }
 }

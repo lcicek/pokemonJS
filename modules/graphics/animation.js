@@ -3,7 +3,7 @@ import { g1, g6, g7, g8 } from "../loaders/image-loaders/backgroundImages.js";
 import { vegetaF, vegetaFR, vegetaFL } from "../loaders/image-loaders/trainerImages.js";
 
 import { Direction } from "../logic/main-game/direction.js";
-import { ticksPerFightMarkKeyframe, ticksPerGrassKeyframe, ticksPerMovementKeyframe } from "../constants/timeConstants.js";
+import { framesPerMovement, ticksPerFightMarkKeyframe, ticksPerGrassKeyframe, ticksPerMovementKeyframe } from "../constants/timeConstants.js";
 import { fightMark } from "../loaders/image-loaders/objectImages.js";
 
 class Animation {
@@ -17,13 +17,14 @@ class Animation {
     }
 
     indexOfKeyframe(tick) {
+        console.log(tick, this.keyframes.length, this.ticksPerKeyframe)
         return Math.floor((tick-1) / this.ticksPerKeyframe)
     }
 }
 
 export class FightMarkAnimation extends Animation {
     constructor() {
-        super(fightMark, ticksPerFightMarkKeyframe)
+        super([fightMark], ticksPerFightMarkKeyframe)
     }
 }
 
@@ -48,6 +49,11 @@ class CharacterAnimation extends Animation {
         super(keyframes, ticksPerMovementKeyframe)
         this.step = 1
         this.lastKeyframe = initialKeyframe
+    }
+
+    indexOfKeyframe(tick) {
+        tick = (tick - 1) % framesPerMovement
+        return Math.floor(tick / this.ticksPerKeyframe)
     }
 
     toggleStep() {

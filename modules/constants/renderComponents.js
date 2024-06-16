@@ -4,5 +4,6 @@ export const RC = {
     Bush: 2,
     Leaves: 3,
     Foreground: 4,
-    GameObjects: 5
+    GameObjects: 5,
+    EncounteredTrainer: 6,
 }

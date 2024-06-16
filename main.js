@@ -46,29 +46,49 @@ async function gameLoop(timestamp) {
     let acted = act(timestamp) // will perform locking mechanisms
 
     handleGameRendering()
-    handleTrainerEncounterRendering()
-    handleDialogueRendering(acted)
+    let trainerDialogueStarts = handleTrainerEncounterRendering(timestamp)
+    handleDialogueRendering(acted || trainerDialogueStarts)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
 
-function handleTrainerEncounterRendering() {
-    if (!stateManager.isInTrainerEncounterState()) return
+function handleTrainerEncounterRendering(timestamp) {
+    if (!stateManager.isInTrainerEncounterState()) return false
 
-    if (animator.isIdle()) {
-        animator.setAnimation()
-    }
-    else if (!animator.isFinished()) animator.animate()
+    if (animator.isIdle()) animator.setAnimation()
+    else animator.animate()
     
     if (animator.isFinished()) {
         animator.reset()
-        stateManager.setState(State.TrainerFight)
-        return
+        // stateManager.setState(State.TrainerFight) // TODO: implement state queue of some kind
+
+        dialogue.setText(activeTrainer.text)
+        stateManager.setState(State.Interaction)
+        lock.lock(framesPerNavigation, timestamp)
+        
+        return true
     }
 
-    activeTrainer.walk()
-    
+    if (animator.isFinalAnimation()) { // TODO: define clear semantics between animator and trainer encounter
+        activeTrainer.walk() // TODO: only needs to be called once
+
+        let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
+        let shifts = Direction.toDeltas(activeTrainer.direction)
+        
+        let tick = animator.getTick()
+        shifts[0] *= tick
+        shifts[1] *= tick
+
+        renderer.walkingTrainer(animator.getKeyframe(), canvasPosition[0], canvasPosition[1], shifts)
+    } else {
+        let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
+        renderer.fightMark(animator.getKeyframe(), canvasPosition[0], canvasPosition[1] - 1)
+    }
+
+    if (animator.isFinalAnimationFrame()) activeTrainer.stand()
+
+    return false
 }
 
 function prepareGameRendering() {
@@ -89,8 +109,8 @@ function prepareGameRendering() {
 }
 
 function handleGameRendering() {
-    if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter()) return
-    if (lock.isUnlocked() && bushManager.isIdle()) return
+    if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter() && !stateManager.isInTrainerEncounterState()) return
+    if (lock.isUnlocked() && bushManager.isIdle() && animator.isIdle()) return
 
     prepareGameRendering()
 
@@ -132,7 +152,7 @@ function tryTrainerEncounter() {
         stateManager.setState(State.AwaitingTrainerEncounter)
         
         animator.addAnimation(fightMarkAnimation, framesPerFightMark)
-        animator.addAnimation(trainer.animation, framesPerMovement * trainer.distanceToPlayer(player.x, player.y))
+        animator.addAnimation(trainer.animation, framesPerMovement * trainer.setNextPosition(player.x, player.y))
     
         activeTrainer = trainer
     }

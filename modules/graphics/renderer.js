@@ -1,5 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y, DIALOGUE_LINE_1_X, DIALOGUE_LINE_1_Y, DIALOGUE_LINE_2_X, DIALOGUE_LINE_2_Y } from "../constants/graphicConstants.js";
 import { outsideImageBG, outsideImageFG, dialogueBoxImage, downArrowImage, grassImageFG } from "../loaders/image-loaders/backgroundImages.js";
+import { l } from "../loaders/image-loaders/characterImages.js";
 
 export class Renderer {
 
@@ -99,5 +100,16 @@ export class Renderer {
 
     dialogueArrow() {
         this.context.drawImage(downArrowImage, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y)
+    }
+
+    fightMark(keyframe, x, y) {
+        this.context.drawImage(keyframe, x * SIZE, y * SIZE)
+    }
+
+    walkingTrainer(keyframe, x, y, shifts) {
+        let canvasX = x * SIZE + shifts[0]
+        let canvasY = y * SIZE + shifts[1]
+
+        this.context.drawImage(keyframe, canvasX, canvasY)
     }
 }

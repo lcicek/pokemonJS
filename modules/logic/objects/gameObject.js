@@ -1,5 +1,6 @@
 import { HEIGHT, NORMALIZE_X, NORMALIZE_Y, WIDTH } from "../../constants/graphicConstants.js"
 import { TrainerAnimation } from "../../graphics/animation.js"
+import { Direction } from "../main-game/direction.js"
 
 class GameObject {
     constructor(x, y, text) {
@@ -47,6 +48,8 @@ export class Trainer extends GameObject {
     constructor(x, y, text, direction, encounterCoordinates, keyframes, initialKeyframe) { // TODO: add name, dialogue etc
         super(x, y, text) // TODO: make text more sophisticated for dialogue later
         
+        this.nextX = undefined
+        this.nextY = undefined
         this.direction = direction
         this.encounterCoordinates = encounterCoordinates
         this.still = true
@@ -62,8 +65,28 @@ export class Trainer extends GameObject {
         this.still = false
     }
 
-    distanceToPlayer(playerX, playerY) {
-        return Math.abs(playerX - this.x + playerY - this.y) - 1
+    stand() {
+        this.still = true
+        this.x = this.nextX
+        this.y = this.nextY
+
+        this.nextX = undefined
+        this.nextY = undefined
+    }
+
+    setNextPosition(playerX, playerY) {
+        let distanceX = Math.abs(playerX - this.x)
+        let distanceY = Math.abs(playerY - this.y)
+        
+        if (Direction.isVertical(this.direction)) distanceY--
+        else distanceX--
+        
+        let totalDistance = distanceX + distanceY
+
+        this.nextX = this.x + distanceX
+        this.nextY = this.y + distanceY
+        
+        return totalDistance
     }
 
     isEncountered(x, y) {
