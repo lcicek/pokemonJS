@@ -1,5 +1,5 @@
 import { Renderer } from "./modules/graphics/renderer.js";
-import { addInputDetection, getActiveKey, keyIsInvalid } from "./modules/inputDetection.js";
+import { addInputDetection, getActiveKey, isMovementKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/main-game/player.js";
 import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
@@ -8,7 +8,7 @@ import { StateManager } from "./modules/logic/state/stateManager.js";
 import { Outside } from "./modules/logic/main-game/space.js";
 import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
-import { Action } from "./modules/constants/action.js";
+import { Key } from "./modules/constants/key.js";
 import { Direction } from "./modules/logic/main-game/direction.js";
 import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
 import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
@@ -17,11 +17,13 @@ import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { FightMarkAnimation, GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
-import { RC } from "./modules/constants/renderComponents.js";
+import { GC } from "./modules/constants/graphicComponents.js";
 import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
 import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
 import { AnimationQueue } from "./modules/graphics/animationQueue.js";
+import { ActionType } from "./modules/constants/actionType.js";
+import { NavigationType } from "./modules/constants/navigationType.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -43,7 +45,11 @@ let activeTrainer // TODO: change
 async function gameLoop(timestamp) {
     tryUpdateIntermediateState()
 
-    let acted = act(timestamp) // will perform locking mechanisms
+    let key = getKey(timestamp)
+    let actionType = tryAction(key, timestamp)
+    let acted = actionType != ActionType.None
+
+    if (actionType == ActionType.Movement) handleGameLogic()
 
     handleGameRendering()
     let trainerDialogueStarts = handleTrainerEncounterRendering(timestamp)
@@ -52,6 +58,38 @@ async function gameLoop(timestamp) {
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
+
+function getKey(timestamp) {
+    if (lock.isLocked()) {
+        lock.tick(timestamp)
+        return null
+    }
+
+    let activeKey = getActiveKey()
+
+    return keyIsInvalid(activeKey) ? null : activeKey
+}
+
+function tryAction(key, timestamp) {
+    if (key == null) return ActionType.None
+
+    if (tryMovement(key, timestamp)) return ActionType.Movement
+    else if (tryMenu(key, timestamp)) return ActionType.Navigation
+    else if (tryInteraction(key, timestamp)) return ActionType.Interaction
+    else return ActionType.None
+}
+
+function handleGameLogic() {
+    tryBush()
+    tryPokemonEncounter()
+    tryTrainerEncounter()
+}
+
+function handleGameGraphics() {
+
+}
+
+
 
 function handleTrainerEncounterRendering(timestamp) {
     if (!stateManager.isInTrainerEncounterState()) return false
@@ -116,24 +154,24 @@ function handleGameRendering() {
     prepareGameRendering()
 
     if (bushManager.isIdle()) { // case: no grass animations occuring
-        renderGame(RC.Player, RC.Bush)
+        renderGame(GC.Player, GC.Bush)
         return
     }
 
-    if (Direction.isVertical(player.direction)) renderGame(RC.GrassAnimation, RC.Player, RC.Bush)
-    else renderGame(RC.Player, RC.Bush, RC.GrassAnimation)
+    if (Direction.isVertical(player.direction)) renderGame(GC.GrassAnimation, GC.Player, GC.Bush)
+    else renderGame(GC.Player, GC.Bush, GC.GrassAnimation)
 }
 
 
 function renderGame(...renderComponents) {
     let playerKeyframe = playerAnimation.getKeyframe(lock.getTick())
-    
     let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
     let relativeGrassCoordinates = bushManager.getRelativeCoordinates(player.x, player.y)
+    
     let bushShouldBeRendered = outside.isBush(player.x, player.y)
+    if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
 
     renderer.setShift(playerVisual.getRemainingShifts())
-    if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
     
     // always render backgrounds, game objects and foregrounds regardless of provided components:
     renderer.backgrounds(playerVisual.x, playerVisual.y)
@@ -141,9 +179,9 @@ function renderGame(...renderComponents) {
     
     if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
     for (let rc of renderComponents) {
-        if (rc == RC.Player) renderer.player(playerKeyframe)
-        else if (rc == RC.Bush && bushShouldBeRendered) renderer.bush()
-        else if (rc == RC.GrassAnimation && grassKeyframes.length != 0) renderer.grassAnimation(grassKeyframes, relativeGrassCoordinates)
+        if (rc == GC.Player) renderer.player(playerKeyframe)
+        else if (rc == GC.Bush && bushShouldBeRendered) renderer.bush()
+        else if (rc == GC.GrassAnimation && grassKeyframes.length != 0) renderer.grassAnimation(grassKeyframes, relativeGrassCoordinates)
     }
     if (foregroundGameObjects.length > 0) renderer.gameObjects(foregroundGameObjects)
     renderer.mapForeground(playerVisual.x, playerVisual.y)
@@ -183,29 +221,6 @@ function tryUpdateIntermediateState() {
     }
 }
 
-function act(timestamp) {
-    if (lock.isLocked()) {
-        lock.tick(timestamp)
-        return false
-    }
-
-    let activeKey = getActiveKey()
-    if (keyIsInvalid(activeKey)) return false
-
-    let navigated = tryMenu(activeKey, timestamp)
-    let interacted = tryInteraction(activeKey, timestamp)
-    let moved = tryMovement(activeKey, timestamp) // TODO: consider changing tryMovement to work even with activeKey = null
-    
-    if (moved) {
-        tryPokemonEncounter()
-        tryBush()
-        tryTrainerEncounter()
-    }
-
-    let acted = navigated || interacted || moved
-    return acted
-}
-
 function tryBush() {    
     if (!player.collided() && outside.isBush(player.x, player.y)) {
         bushManager.add(player.x, player.y)
@@ -213,7 +228,7 @@ function tryBush() {
 }
 
 function tryInteraction(activeKey, timestamp) {
-    if (stateManager.isInGameState() && activeKey == Action.A) { // case: start
+    if (stateManager.isInGameState() && activeKey == Key.A) { // case: start
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
@@ -234,7 +249,7 @@ function tryInteraction(activeKey, timestamp) {
         return true
     } 
     
-    if (stateManager.isInInteractionState() && (activeKey == Action.A || activeKey == Action.B)) { // case: continues
+    if (stateManager.isInInteractionState() && (activeKey == Key.A || activeKey == Key.B)) { // case: continues
         if (dialogue.isLastBlock()) {
             stateManager.setState(State.ClosingField)
             lock.lock(framesPerClosingField, timestamp)
@@ -251,7 +266,7 @@ function tryInteraction(activeKey, timestamp) {
 
 function handleDialogueRendering(acted) {
     if (stateManager.isInClosingFieldState()) {
-        renderGame(RC.Player, RC.Bush)
+        renderGame(GC.Player, GC.Bush)
         return
     }
 
@@ -265,33 +280,28 @@ function tryMenu(activeKey, timestamp) {
     if (lock.isLocked()) return false
     if (!stateManager.isInGameState() && !stateManager.isInMenuState()) return false // only states where menu can be interacted with
 
-    // case: menu is closed
-    if (menuNavigator.isClosed()) {
-        let wasOpened = menuNavigator.tryOpen(activeKey)
-        if (wasOpened) stateManager.setState(State.Menu)
-        
-        return wasOpened
-    }
+    if (menuNavigator.isClosed()) menuNavigator.tryOpen(activeKey)
+    else menuNavigator.update(activeKey)
 
-    // case: menu is open
-    let gameMenuWasOpen = menuNavigator.getActive() instanceof GameMenu
-    let navigated = menuNavigator.update(activeKey) // case: user initiated navigation in menu
-    let bagMenuWasOpened = navigated && gameMenuWasOpen && menuNavigator.getActive() instanceof BagMenu
-
-    if (bagMenuWasOpened) {
-        menuNavigator.getActive().setItems(bag.contents)
-    }
-
-    menuNavigator.setDisplay()
-
-    if (menuNavigator.isClosed()) { // case: user closed menu
+    if (menuNavigator.lastNavigationType == NavigationType.Close && menuNavigator.isClosed()) { // case: menu was closed in last update
         stateManager.setState(State.ClosingField)
         lock.lock(framesPerClosingField, timestamp)
         return true
-    } 
+    }
 
-    if (navigated) lock.lock(framesPerNavigation, timestamp)
+    let gameMenuWasOpened = menuNavigator.lastNavigationType == NavigationType.Open
 
+    if (gameMenuWasOpened && menuNavigator.bagMenuIsOpen()) {
+        menuNavigator.getActive().setItems(bag.contents)
+    }
+    
+    if (gameMenuWasOpened && menuNavigator.gameMenuIsOpen()) {
+        stateManager.setState(State.Menu)
+    }
+
+    let navigated = menuNavigator.lastNavigationType != NavigationType.None
+    if (navigated) lock.lock(framesPerNavigation, timestamp) 
+    
     return navigated
 }
 
@@ -305,15 +315,14 @@ function tryPokemonEncounter() {
 }
 
 function tryMovement(activeKey, timestamp) {
-    if (lock.isLocked()) return false
+    if (lock.isLocked() || !stateManager.isInGameState() || !isMovementKey(activeKey)) return false
     if (!stateManager.isInGameState()) return false
 
     let moved = MovementHandler.tryMovement(player, outside, activeKey) // will update player location and direction
-    if (moved) {
-        playerAnimation.setKeyframeCycle(player.direction)
-        playerAnimation.toggleStep()
-        lock.lock(framesPerMovement, timestamp)
-    }
+    lock.lock(framesPerMovement, timestamp)
+
+    playerAnimation.setKeyframeCycle(player.direction)
+    playerAnimation.toggleStep()
 
     return moved
 }
@@ -325,7 +334,7 @@ window.onload = function() {
     outside.addCollisions(collisionCoordinates)
 
     renderer.initialize()
-    renderGame(RC.Player, RC.Bush) // initial render
+    renderGame(GC.Player, GC.Bush) // initial render
 
     menuNavigator = new MenuNavigator()
     window.requestAnimationFrame(gameLoop)

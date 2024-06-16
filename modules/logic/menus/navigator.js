@@ -1,6 +1,7 @@
 import { GameMenu, BagMenu, SaveMenu, PokemonMenu, PokemonDetailsMenu } from "./menu.js"
 import { Direction } from "../main-game/direction.js"
-import { Action } from "../../constants/action.js"
+import { Key } from "../../constants/key.js"
+import { NavigationType } from "../../constants/navigationType.js"
 
 // const startMenu = new StartMenu()
 const gameMenu = new GameMenu()
@@ -17,19 +18,34 @@ class NavigatorInterface {
 
         this.menuDisplay = document.getElementById(menuDisplay)
         this.subMenuDisplay = document.getElementById(subMenuDisplay)
+        this.lastNavigationType = NavigationType.None
     }
 
     update(input) {
         if (!this.isOpen()) console.error("Navigator.update() was called despite not being active.") // sanity check
 
-        let navigated = true
+        if (Direction.isDirection(input)) {
+            this.getActive().navigate(input)
+            this.lastNavigationType = NavigationType.Select
+            this.setDisplay()
+            return
+        } 
+        
+        if (input === Key.B) {
+            this.closeMenu()
+            this.lastNavigationType = NavigationType.Close
+            this.setDisplay()
+            return
+        }
+        
+        if (input === Key.A) {
+            this.nextMenu()
+            this.lastNavigationType = NavigationType.Open
+            this.setDisplay()
+            return
+        }
 
-        if (Direction.isDirection(input)) navigated = this.getActive().navigate(input)
-        else if (input === Action.B) this.closeMenu()
-        else if (input === Action.A) this.nextMenu()
-        else navigated = false
-
-        return navigated
+        this.lastNavigationType = NavigationType.None
     }
 
     setDisplay() {
@@ -67,23 +83,21 @@ export class MenuNavigator extends NavigatorInterface {
     }
 
     tryOpen(input) {
-        if (this.isOpen()) return true
+        if (this.isOpen()) return
 
-        let opened = false
-        if (input === Action.START) {
+        if (input === Key.START) {
             this.activate()
-            opened = true
+            this.lastNavigationType = NavigationType.Open
         }
 
         this.setDisplay()
-        return opened
     }
 
     nextMenu() {
         if (this.active === 0) {
             let gameMenu = this.getActive()
 
-            if (gameMenu.bagSelected()) this.active = 1
+            if (gameMenu.bagSelected()) this.active = 1 // TODO: change numbers
             else if (gameMenu.saveSelected()) this.active = 2
             else if (gameMenu.pokemonSelected()) this.active = 3
             else console.error("Error occured. Game Menu item is not selected properly.")
@@ -99,5 +113,13 @@ export class MenuNavigator extends NavigatorInterface {
 
         if (1 <= this.active && this.active <= 3) this.active = 0
         else this.active--
+    }
+
+    bagMenuIsOpen() {
+        return this.getActive() instanceof BagMenu
+    }
+
+    gameMenuIsOpen() {
+        return this.active == 0
     }
 }

@@ -15,7 +15,7 @@ class GameObject {
 
     isInView(playerX, playerY) {
         let [canvasX, canvasY] = this.getCanvasPosition(playerX, playerY)
-        return -1 <= canvasX && canvasX <= WIDTH+1 && -1 <= canvasY && canvasY <= HEIGHT+1 // add a margin of -1/+1 so object doesnt get cut out when it's moving out of frame
+        return -2 <= canvasX && canvasX <= WIDTH+2 && -2 <= canvasY && canvasY <= HEIGHT+2 // add a margin of -2/+2 so object doesnt get cut out when it's moving out of frame
     }
 
     getCanvasPosition(playerX, playerY) {

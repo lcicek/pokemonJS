@@ -1,4 +1,4 @@
-export const RC = {
+export const GC = {
     Background: 0,
     Player: 1,
     Bush: 2,

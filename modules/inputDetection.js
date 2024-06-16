@@ -42,7 +42,7 @@ export function getActiveKey() {
     return activeKey
 }
 
-export function isMovementKey() {
+export function isMovementKey(key) {
     return key == "w" || key == "a" || key == "s" || key == "d"
 }
 
