@@ -60,4 +60,9 @@ export class Direction {
     
         return deltas
     }
+
+    static toScalarDeltas(key, scalar) {
+        let deltas = this.toDeltas(key)
+        return [deltas[0] * scalar, deltas[1] * scalar]
+    }
 }

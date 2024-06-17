@@ -63,7 +63,7 @@ export class Trainer extends GameObject {
     }
 
     isInForeground(playerY) {
-        return this.y > playerY
+        return this.nextY == undefined ? this.y > playerY : this.nextY > playerY
     }
 
     isStill() {

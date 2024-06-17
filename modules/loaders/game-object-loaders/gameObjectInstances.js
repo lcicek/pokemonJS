@@ -13,5 +13,5 @@ export const interactables = [
 ]
 
 export const trainers = [
-    new Trainer(5, 4, "Strength Is the Only Thing That Matters in This World.", 's', [[5, 5], [5, 6], [5, 7], [5, 8]], [[vegetaFR, vegetaF], [vegetaFL, vegetaF]], vegetaF)
+    new Trainer(5, 4, "Strength is the only thing that matters in this world.", 's', [[5, 5], [5, 6], [5, 7], [5, 8]], [[vegetaFR, vegetaF], [vegetaFL, vegetaF]], vegetaF)
 ]

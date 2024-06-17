@@ -14,14 +14,12 @@ import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncounter
 import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
-import { FightMarkAnimation, GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
+import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
 import { GC } from "./modules/constants/graphicComponents.js";
 import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/main-game/bag.js";
-import { BagMenu, GameMenu } from "./modules/logic/menus/menu.js";
-import { AnimationQueue } from "./modules/graphics/animationQueue.js";
 import { ActionType } from "./modules/constants/actionType.js";
 import { NavigationType } from "./modules/constants/navigationType.js";
 
@@ -34,42 +32,55 @@ let menuNavigator;
 let dialogue = new Dialogue()
 let bushManager = new BushManager()
 let grassAnimation = new GrassAnimation()
-let fightMarkAnimation = new FightMarkAnimation()
 let lock = new Lock()
 let bag = new Bag()
 let renderer = new Renderer()
-let animationQueue = new AnimationQueue()
 
-let activeTrainer // TODO: change 
+// TODO: consider changing approach:
+let activeTrainer
+let activeTarget
 
 async function gameLoop(timestamp) {
-    if (lock.isLocked()) {
-        lock.tick(timestamp)
-    }
+    let wasUnlocked = updateLock(timestamp)
+    let acted = handleGameLogic(timestamp)    
+    let mustRender = rerenderIsNecessary(acted, wasUnlocked)
 
-    let acted = false
-
-    if (lock.isUnlocked()) {
-        tryUpdateIntermediateState()
-
-        if (stateManager.isInputState()) {
-            let key = getKey()
-            let actionType = tryAction(key, timestamp)
-            acted = actionType != ActionType.None
-
-            if (actionType == ActionType.Movement) handleGameLogic()
-        }
-
-        handleTrainerEncounter(timestamp)
-    }
-
-    handleGameRendering()
+    handleGameRendering(mustRender)
     handleTrainerEncounterRendering()
-    handleDialogueRendering(acted)
+    handleDialogueRendering(mustRender)
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
+
+function updateLock(timestamp) {
+    if (lock.isLocked()) lock.tick(timestamp)
+
+    return lock.isUnlocked()
+}
+
+function rerenderIsNecessary(acted, wasUnlocked) {
+    return acted || lock.isLocked() || wasUnlocked || !bushManager.isIdle()
+}
+
+function handleGameLogic(timestamp) {
+    if (lock.isLocked()) return false
+
+    let acted = false
+    tryUpdateIntermediateState()
+
+    if (stateManager.isInputState()) {
+        let key = getKey()
+        let actionType = tryAction(key, timestamp)
+        acted = actionType != ActionType.None
+
+        if (actionType == ActionType.Movement) tryPostMovementAction()
+    }
+
+    handleTrainerEncounter(timestamp)
+
+    return acted
+}
 
 function getKey() {
     let activeKey = getActiveKey()
@@ -85,7 +96,7 @@ function tryAction(key, timestamp) {
     else return ActionType.None
 }
 
-function handleGameLogic() {
+function tryPostMovementAction() {
     tryBush()
     tryPokemonEncounter()
     tryTrainerEncounter()
@@ -97,49 +108,36 @@ function handleTrainerEncounter(timestamp) {
     let state = stateManager.getActiveState()
     let lockDuration
 
-    if (state == State.TrainerEncounter) lockDuration = framesPerFightMark
-    else if (state == State.TrainerWalk) {
+    if (state == State.TrainerEncounter) {
+        lockDuration = framesPerFightMark*2
+    } else if (state == State.TrainerWalk) {
         lockDuration = framesPerMovement * activeTrainer.setNextPosition(player.x, player.y)
         activeTrainer.walk()
     } else if (state == State.Interaction) {
         activeTrainer.stand()
         outside.addCollision(activeTrainer.nextX, activeTrainer.nextY) // TODO: check if causes issues
         dialogue.setText(activeTrainer.text)   
-        return
+        return // i.e. don't lock since user has to press key 
     }
 
     lock.lock(lockDuration, timestamp)
 }
 
 function handleTrainerEncounterRendering() {
-    if (!stateManager.isInTrainerEncounterState()) return false
-
-    if (animationQueue.isIdle()) animationQueue.setAnimation()
-    else animationQueue.animate()
-    
-    if (stateManager.getActiveState() == State.Interaction) {
-        animationQueue.reset()
-        // stateManager.setState(State.TrainerFight) // TODO: implement state queue of some kind
-        return true
-    }
+    if (!stateManager.isInTrainerEncounterState() || stateManager.getActiveState() == State.Interaction) return
 
     if (stateManager.getActiveState() == State.TrainerWalk) {
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
-        let shifts = Direction.toDeltas(activeTrainer.direction)
-        
-        shifts[0] *= lock.getTick()
-        shifts[1] *= lock.getTick()
+        let shifts = Direction.toScalarDeltas(activeTrainer.direction, lock.getTick())
 
-        renderer.walkingTrainer(animationQueue.getKeyframe(lock.getTick()), canvasPosition[0], canvasPosition[1], shifts)
-        return false
+        renderer.walkingTrainer(activeTrainer.animation.getKeyframe(lock.getTick()), canvasPosition[0], canvasPosition[1], shifts)
+        return
     } 
     
     if (stateManager.getActiveState() == State.TrainerEncounter) {
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
         renderer.fightMark(canvasPosition[0], canvasPosition[1] - 1)
     }
-
-    return false
 }
 
 function prepareGameRendering() {
@@ -163,9 +161,8 @@ function prepareGameRendering() {
     }
 }
 
-function handleGameRendering() {
-    if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter() && !stateManager.isInTrainerEncounterState()) return
-    if (lock.isUnlocked() && bushManager.isIdle() && animationQueue.isIdle()) return
+function handleGameRendering(mustRender) {
+    if (!mustRender) return // TODO: refine
 
     prepareGameRendering()
 
@@ -178,7 +175,6 @@ function handleGameRendering() {
     else renderGame(GC.Player, GC.Bush, GC.GrassAnimation)
 }
 
-
 function renderGame(...gameComponents) {
     let playerKeyframe = stateManager.isInGameState() ? playerAnimation.getKeyframe(lock.getTick()) : playerAnimation.lastKeyframe
     let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
@@ -188,17 +184,19 @@ function renderGame(...gameComponents) {
     if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
 
     renderer.setShift(playerVisual.getRemainingShifts())
-    
+
     // always render backgrounds, game objects and foregrounds regardless of provided components:
     renderer.backgrounds(playerVisual.x, playerVisual.y)
     let [backgroundGameObjects, foregroundGameObjects] = getGameObjectsForRendering(player.x, player.y)
     
     if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
+
     for (let gc of gameComponents) {
         if (gc == GC.Player) renderer.player(playerKeyframe)
         else if (gc == GC.Bush && bushShouldBeRendered) renderer.bush()
         else if (gc == GC.GrassAnimation && grassKeyframes.length != 0) renderer.grassAnimation(grassKeyframes, relativeGrassCoordinates)
     }
+
     if (foregroundGameObjects.length > 0) renderer.gameObjects(foregroundGameObjects)
     renderer.mapForeground(playerVisual.x, playerVisual.y)
 }
@@ -208,9 +206,6 @@ function tryTrainerEncounter() {
 
     if (trainer != null) {
         stateManager.setNextStates(State.AwaitingTrainerEncounter, State.TrainerEncounter, State.TrainerWalk, State.Interaction, State.TrainerFight)
-
-        animationQueue.addAnimation(fightMarkAnimation)
-        animationQueue.addAnimation(trainer.animation)
     
         activeTrainer = trainer
         trainer.wasEncountered()
@@ -219,7 +214,9 @@ function tryTrainerEncounter() {
 }
 
 function tryUpdateIntermediateState() {
-    if (stateManager.hasNextState() && !stateManager.isInInteractionState()) stateManager.enterNextState()
+    if (stateManager.hasNextState() && !stateManager.isInInteractionState()) {
+        stateManager.enterNextState()
+    }
 }
 
 function tryBush() {    
@@ -229,7 +226,8 @@ function tryBush() {
 }
 
 function tryInteraction(activeKey, timestamp) {
-    if (stateManager.isInGameState() && activeKey == Key.A) { // case: start
+    // case: user starts interaction
+    if (stateManager.isInGameState() && activeKey == Key.A) {
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
@@ -237,45 +235,44 @@ function tryInteraction(activeKey, timestamp) {
         
         if (target == null) return false
 
-        if (target instanceof Collectable) {
-            target.collect()
-            outside.removeCollision(targetX, targetY)
-            bag.add(target)
-        }
-        
-        dialogue.setText(target.text)
+        activeTarget = target
 
+        dialogue.setText(target.text)
         stateManager.setState(State.Interaction)
         lock.lock(framesPerNavigation, timestamp)
+        
         return true
     } 
-    
-    if (stateManager.isInInteractionState() && (activeKey == Key.A || activeKey == Key.B)) { // case: continues
-        if (dialogue.isLastBlock()) {
-            if (stateManager.hasNextState()) stateManager.enterNextState() // TODO: make more robust (when should you enter a next state, when should you set next states?)
-            else {
-                stateManager.setNextStates(State.ClosingField, State.Game)
-                lock.lock(framesPerClosingField, timestamp)
-            }
-        } else {
-            dialogue.nextBlock()
-            lock.lock(framesPerNavigation, timestamp)
-        }
 
+    // case: no interaction
+    if (!stateManager.isInInteractionState() || (activeKey != Key.A && activeKey != Key.B)) return false
+    
+    // case: user presses A or B during interaction
+    if (!dialogue.isLastBlock()) {
+        dialogue.nextBlock()
+        lock.lock(framesPerNavigation, timestamp)
         return true
     }
 
-    return false
-}
-
-function handleDialogueRendering(acted) {
-    if (stateManager.isInClosingFieldState()) {
-        renderGame(GC.Player, GC.Bush)
-        return
+    if (activeTarget instanceof Collectable) {
+        activeTarget.collect()
+        outside.removeCollision(activeTarget.x, activeTarget.y)
+        bag.add(activeTarget)
     }
 
-    if (!stateManager.isInInteractionState()) return
-    if (stateManager.isInInteractionState && !acted && stateManager.getNextState() != State.TrainerFight) return
+    if (stateManager.hasNextState()) stateManager.enterNextState() // TODO: consider adding lock here too
+    else {
+        stateManager.setNextStates(State.ClosingField, State.Game)
+        lock.lock(framesPerClosingField, timestamp)
+    }
+
+    return true
+    
+
+}
+
+function handleDialogueRendering(mustRender) {
+    if (!stateManager.isInInteractionState() || !mustRender) return
 
     renderer.dialogue(dialogue.getCurrentBlock(), dialogue.isLastBlock())
 }
@@ -287,7 +284,8 @@ function tryMenu(activeKey, timestamp) {
     if (menuNavigator.isClosed()) menuNavigator.tryOpen(activeKey)
     else menuNavigator.update(activeKey)
 
-    if (menuNavigator.lastNavigationType == NavigationType.Close && menuNavigator.isClosed()) { // case: menu was closed in last update
+    // case: menu was closed during last update
+    if (menuNavigator.lastNavigationType == NavigationType.Close && menuNavigator.isClosed()) {
         stateManager.setNextStates(State.ClosingField, State.Game)
         lock.lock(framesPerClosingField, timestamp)
         return true
@@ -295,13 +293,15 @@ function tryMenu(activeKey, timestamp) {
 
     let gameMenuWasOpened = menuNavigator.lastNavigationType == NavigationType.Open
 
+    // case: game menu was opened during last update
+    if (gameMenuWasOpened && menuNavigator.gameMenuIsOpen()) {
+        stateManager.setState(State.Menu)
+    }
+
+    // case: bag menu was opened during last update
     if (gameMenuWasOpened && menuNavigator.bagMenuIsOpen()) {
         menuNavigator.getActive().setItems(bag.contents)
         menuNavigator.setDisplay()
-    }
-    
-    if (gameMenuWasOpened && menuNavigator.gameMenuIsOpen()) {
-        stateManager.setState(State.Menu)
     }
 
     let navigated = menuNavigator.lastNavigationType != NavigationType.None
