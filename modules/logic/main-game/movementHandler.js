@@ -1,4 +1,4 @@
-import { Direction } from "./direction.js"
+import { Direction } from "../utils/direction.js"
 
 var coordinatesDisplay = document.getElementById("coordinatesDisplay")
 var prevCoordinatesDisplay = document.getElementById("prevCoordinatesDisplay")

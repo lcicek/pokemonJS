@@ -1,27 +1,27 @@
 import { Renderer } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, isMovementKey, keyIsInvalid } from "./modules/inputDetection.js";
 import { enforceFps } from "./modules/time/timeHandler.js";
-import { Player } from "./modules/logic/main-game/player.js";
+import { Player } from "./modules/logic/objects/player.js";
 import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
 import { StateManager } from "./modules/logic/state/stateManager.js";
-import { Outside } from "./modules/logic/main-game/space.js";
+import { Outside } from "./modules/logic/objects/space.js";
 import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
-import { Key } from "./modules/constants/key.js";
-import { Direction } from "./modules/logic/main-game/direction.js";
-import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/constants/gameObjects.js";
+import { Key } from "./modules/constants/dictionaries/key.js";
+import { Direction } from "./modules/logic/utils/direction.js";
+import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
 import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
 import { PlayerVisual } from "./modules/graphics/playerVisual.js";
 import { BushManager } from "./modules/logic/main-game/bushManager.js";
-import { GC } from "./modules/constants/graphicComponents.js";
+import { GC } from "./modules/constants/dictionaries/graphicComponents.js";
 import { Collectable } from "./modules/logic/objects/gameObject.js";
-import { Bag } from "./modules/logic/main-game/bag.js";
-import { ActionType } from "./modules/constants/actionType.js";
-import { NavigationType } from "./modules/constants/navigationType.js";
+import { Bag } from "./modules/logic/objects/bag.js";
+import { ActionType } from "./modules/constants/dictionaries/actionType.js";
+import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)

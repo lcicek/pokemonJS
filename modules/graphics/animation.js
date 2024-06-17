@@ -2,7 +2,7 @@ import { f, fr, fl, b, br, bl, r, rr, rl, l, lr, ll } from "../loaders/image-loa
 import { g1, g6, g7, g8 } from "../loaders/image-loaders/backgroundImages.js";
 import { vegetaF, vegetaFR, vegetaFL } from "../loaders/image-loaders/trainerImages.js";
 
-import { Direction } from "../logic/main-game/direction.js";
+import { Direction } from "../logic/utils/direction.js";
 import { framesPerMovement, ticksPerFightMarkKeyframe, ticksPerGrassKeyframe, ticksPerMovementKeyframe } from "../constants/timeConstants.js";
 import { fightMark } from "../loaders/image-loaders/objectImages.js";
 

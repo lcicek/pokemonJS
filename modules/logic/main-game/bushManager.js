@@ -1,4 +1,4 @@
-import { Bush } from "./bush.js"
+import { Bush } from "../objects/bush.js"
 
 export class BushManager {
     constructor() {

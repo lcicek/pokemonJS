@@ -1,6 +1,6 @@
-import { Sign, Collectable, Trainer } from "../logic/objects/gameObject.js"
-import { sign, pokeball } from "../loaders/image-loaders/objectImages.js"
-import { trainers, interactables } from "../loaders/game-object-loaders/gameObjectInstances.js"
+import { Sign, Collectable, Trainer } from "../objects/gameObject.js"
+import { sign, pokeball } from "../../loaders/image-loaders/objectImages.js"
+import { trainers, interactables } from "../../loaders/object-loaders/gameObjectInstances.js"
 
 export function trainerIsEncountered(x, y) {
     for (let trainer of trainers) {

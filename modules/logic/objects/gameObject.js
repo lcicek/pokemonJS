@@ -1,6 +1,6 @@
 import { HEIGHT, NORMALIZE_X, NORMALIZE_Y, WIDTH } from "../../constants/graphicConstants.js"
 import { TrainerAnimation } from "../../graphics/animation.js"
-import { Direction } from "../main-game/direction.js"
+import { Direction } from "../utils/direction.js"
 
 class GameObject {
     constructor(x, y, text) {

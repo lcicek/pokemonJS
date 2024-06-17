@@ -1,5 +1,5 @@
 import { NORMALIZE_X, NORMALIZE_Y, SIZE } from "../constants/graphicConstants.js"
-import { Direction } from "../logic/main-game/direction.js"
+import { Direction } from "../logic/utils/direction.js"
 
 export class CharacterVisual {
     constructor() {

@@ -1,7 +1,7 @@
 import { GameMenu, BagMenu, SaveMenu, PokemonMenu, PokemonDetailsMenu } from "./menu.js"
-import { Direction } from "../main-game/direction.js"
-import { Key } from "../../constants/key.js"
-import { NavigationType } from "../../constants/navigationType.js"
+import { Direction } from "../utils/direction.js"
+import { Key } from "../../constants/dictionaries/key.js"
+import { NavigationType } from "../../constants/dictionaries/navigationType.js"
 
 // const startMenu = new StartMenu()
 const gameMenu = new GameMenu()
