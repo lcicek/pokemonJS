@@ -5,33 +5,25 @@ import { CharacterAnimation } from "./animation.js"
 export class AnimationQueue {
     constructor() {
         this.animations = []
-        this.durations = []
         this.idle = true
         this.finished = false
     }
 
-    addAnimation(animation, duration) {
+    addAnimation(animation) {
         this.animations.push(animation)
-        this.durations.push(duration)
     }
 
     setAnimation() {
         this.animation = this.animations.shift()
-        this.duration = this.durations.shift()
-
-        this.lock = new Lock()
-        this.lock.lock(this.duration)
-
         this.idle = false
     }
 
-    animate() {
+    animate(tick) {
         if (this.idle) return
-        if (this.lock.isLocked()) {
-            if (this.animation instanceof CharacterAnimation && (this.lock.getTick() - 1) % framesPerMovement == 0) this.animation.toggleStep() 
-            this.lock.tick()
-        }
-        if (this.lock.isLocked()) return // special case where we need to check if the last tick has unlocked the lock
+
+        if (this.animation instanceof CharacterAnimation && (tick- 1) % framesPerMovement == 0) this.animation.toggleStep()
+        
+        // TODO: consider special case where we need to check if the last tick has unlocked the lock
         
         if (this.animations.length > 0) this.setAnimation()
         else this.finished = true
@@ -40,21 +32,14 @@ export class AnimationQueue {
 
     reset() {
         this.animations = []
-        this.durations = []
         this.idle = true
         this.finished = false
     }
 
-    getKeyframe() {
+    getKeyframe(tick) {
         if (this.isIdle()) return undefined
 
-        return this.animation.getKeyframe(this.lock.getTick())
-    }
-
-    getTick() {
-        if (this.isIdle()) return undefined
-
-        return this.lock.getTick()
+        return this.animation.getKeyframe(tick)
     }
 
     isIdle() {
@@ -66,7 +51,7 @@ export class AnimationQueue {
     }
 
     isFinalAnimationFrame() {
-        return this.lock.isLastTick() && this.animations.length == 0
+        return this.animations.length == 0
     }
 
     isFinalAnimation() {

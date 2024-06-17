@@ -4,7 +4,31 @@ var stateDisplay = document.getElementById("stateDisplay")
 
 export class StateManager {
     constructor() {
+        this.nextStates = []
         this.setState(State.Game)
+        this.mode = 0 // 0 = single, 1 = queue
+    }
+
+    setNextStates(...states) {
+        this.nextStates = states
+        this.mode = 1
+        this.enterNextState()
+    }
+
+    isInputState() {
+        return this.state == State.Game || this.state == State.Menu || this.state == State.Interaction
+    }
+
+    getNextState() {
+        return this.nextStates[0]
+    }
+
+    enterNextState() {
+        if (this.nextStates.length > 0) {
+            let currentState = this.nextStates.shift()
+            this.setState(currentState)
+        }
+        else this.mode = 0
     }
 
     setState(state) {
@@ -16,8 +40,12 @@ export class StateManager {
         return this.state
     }
 
+    hasNextState() {
+        return this.nextStates.length > 0
+    }
+
     isInGameState() {
-        return this.state == State.Game || this.state == State.AwaitingEncounter
+        return this.state == State.Game || this.state == State.AwaitingPokemonEncounter // TODO: inspect
     }
 
     isInInteractionState() {
@@ -28,12 +56,14 @@ export class StateManager {
         return this.state == State.Menu
     }
 
-    isAwaitingEncounter() {
-        return this.state == State.AwaitingEncounter
+    isAwaitingPokemonEncounter() {
+        return this.state == State.AwaitingPokemonEncounter
     }
 
     isInTrainerEncounterState() {
-        return this.state == State.TrainerEncounter
+        return this.state == State.TrainerEncounter || 
+               this.state == State.TrainerWalk ||
+              (this.state == State.Interaction && this.getNextState() == State.TrainerFight) 
     }
 
     isAwaitingTrainerEncounter() {
@@ -41,7 +71,7 @@ export class StateManager {
     }
 
     isAwaitingAnyEncounter() {
-        return this.isAwaitingEncounter() || this.isAwaitingTrainerEncounter()
+        return this.isAwaitingPokemonEncounter() || this.isAwaitingTrainerEncounter()
     }
 
     isInClosingFieldState() {

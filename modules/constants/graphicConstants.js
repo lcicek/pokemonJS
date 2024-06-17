@@ -1,7 +1,7 @@
 export const SIZE = 32
 
-export const WIDTH = 15 // X
-export const HEIGHT = 11 // Y
+export const WIDTH = 17 // X
+export const HEIGHT = 13 // Y
 
 export const CANVAS_WIDTH = WIDTH * SIZE
 export const CANVAS_HEIGHT = HEIGHT * SIZE

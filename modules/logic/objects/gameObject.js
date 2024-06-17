@@ -55,9 +55,6 @@ export class Trainer extends GameObject {
         this.nextX = undefined
         this.nextY = undefined
 
-        this.tmpX = undefined
-        this.tmpY = undefined
-
         this.direction = direction
         this.encounterCoordinates = encounterCoordinates
         this.still = true
@@ -66,7 +63,7 @@ export class Trainer extends GameObject {
     }
 
     isInForeground(playerY) {
-        return this.getY() > playerY
+        return this.y > playerY
     }
 
     isStill() {
@@ -79,31 +76,28 @@ export class Trainer extends GameObject {
 
     stand() {
         this.still = true
-        this.tmpX = this.nextX
-        this.tmpY = this.nextY
-
-        this.nextX = undefined
-        this.nextY = undefined
+        this.x = this.nextX // TODO: consider changing once player location is refreshed
+        this.y = this.nextY
     }
 
     setNextPosition(playerX, playerY) {
-        let distanceX = Math.abs(playerX - this.getX())
-        let distanceY = Math.abs(playerY - this.getY())
+        let distanceX = Math.abs(playerX - this.x)
+        let distanceY = Math.abs(playerY - this.y)
         
         if (Direction.isVertical(this.direction)) distanceY--
         else distanceX--
         
         let totalDistance = distanceX + distanceY
 
-        this.nextX = this.getX() + distanceX
-        this.nextY = this.getY() + distanceY
+        this.nextX = this.x + distanceX
+        this.nextY = this.y + distanceY
         
         return totalDistance
     }
 
     resetPosition() {
-        this.tmpX = undefined
-        this.tmpY = undefined
+        this.nextX = undefined
+        this.nextY = undefined
     }
 
     isEncountered(x, y) {
@@ -121,17 +115,9 @@ export class Trainer extends GameObject {
     }
 
     getCanvasPosition(playerX, playerY) {
-        let relativeX = playerX - this.getX()
-        let relativeY = playerY - this.getY()
+        let relativeX = playerX - this.x
+        let relativeY = playerY - this.y
         
         return [NORMALIZE_X - relativeX, NORMALIZE_Y - relativeY - 0.5] // -0.5 because trainer sprites are 32x48 large
-    }
-
-    getX() {
-        return this.tmpX == undefined ? this.x : this.tmpX
-    }
-
-    getY() {
-        return this.tmpY == undefined ? this.y : this.tmpY
     }
 }

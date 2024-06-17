@@ -88,6 +88,8 @@ export class MenuNavigator extends NavigatorInterface {
         if (input === Key.START) {
             this.activate()
             this.lastNavigationType = NavigationType.Open
+        } else {
+            this.lastNavigationType = NavigationType.None
         }
 
         this.setDisplay()
