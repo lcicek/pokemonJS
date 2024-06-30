@@ -60,10 +60,18 @@ export class StateManager {
         return this.state == State.AwaitingPokemonEncounter
     }
 
+    isInFightState() {
+        return this.state == State.TrainerFight || this.state == State.PokemonFight
+    }
+
     isInTrainerEncounterState() {
         return this.state == State.TrainerEncounter || 
                this.state == State.TrainerWalk ||
-              (this.state == State.Interaction && this.getNextState() == State.TrainerFight) 
+              (this.state == State.Interaction && this.getNextState() == State.EncounterTransition) 
+    }
+
+    isInTransitionState() {
+        return this.state == State.EncounterTransition // TODO: add different transition states here
     }
 
     isAwaitingTrainerEncounter() {

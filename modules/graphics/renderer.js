@@ -113,4 +113,13 @@ export class Renderer {
 
         this.context.drawImage(keyframe, canvasX, canvasY)
     }
+
+    transitionBoxes(boxCoordinates) {
+        for (let boxCoordinate of boxCoordinates) {
+            let canvasX = boxCoordinate[0] * SIZE;
+            let canvasY = boxCoordinate[1] * SIZE;
+
+            this.context.fillRect(canvasX, canvasY, SIZE, SIZE);
+        }
+    }
 }

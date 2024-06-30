@@ -11,7 +11,7 @@ import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
 import { Direction } from "./modules/logic/utils/direction.js";
 import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
-import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation } from "./modules/constants/timeConstants.js";
+import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, ticksPerEncounterTransition } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
@@ -22,6 +22,7 @@ import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/objects/bag.js";
 import { ActionType } from "./modules/constants/dictionaries/actionType.js";
 import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
+import { EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
 
 let outside = new Outside()
 let player = new Player(8, 8)
@@ -32,6 +33,7 @@ let menuNavigator;
 let dialogue = new Dialogue()
 let bushManager = new BushManager()
 let grassAnimation = new GrassAnimation()
+let encounterTransitionAnimation = new EncounterTransitionAnimation()
 let lock = new Lock()
 let bag = new Bag()
 let renderer = new Renderer()
@@ -48,10 +50,18 @@ async function gameLoop(timestamp) {
     handleGameRendering(mustRender)
     handleTrainerEncounterRendering()
     handleDialogueRendering(mustRender)
+    renderTransition()
 
     await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
     window.requestAnimationFrame(gameLoop)
 };
+
+function renderTransition() {
+    if (!stateManager.isInTransitionState() || lock.isUnlocked()) return;
+
+    let boxCoordinates = encounterTransitionAnimation.getBoxCoordinates(lock.getTick());
+    renderer.transitionBoxes(boxCoordinates)
+}
 
 function updateLock(timestamp) {
     if (lock.isLocked()) lock.tick(timestamp)
@@ -60,6 +70,8 @@ function updateLock(timestamp) {
 }
 
 function rerenderIsNecessary(acted, wasUnlocked) {
+    if (stateManager.isInTransitionState() || stateManager.isInFightState()) return false
+
     return acted || lock.isLocked() || wasUnlocked || !bushManager.isIdle()
 }
 
@@ -75,6 +87,8 @@ function handleGameLogic(timestamp) {
         acted = actionType != ActionType.None
 
         if (actionType == ActionType.Movement) tryPostMovementAction()
+    } else if (stateManager.isInTransitionState()) {
+        lock.lock(ticksPerEncounterTransition)
     }
 
     handleTrainerEncounter(timestamp)
@@ -205,7 +219,7 @@ function tryTrainerEncounter() {
     let trainer = trainerIsEncountered(player.x, player.y)
 
     if (trainer != null) {
-        stateManager.setNextStates(State.AwaitingTrainerEncounter, State.TrainerEncounter, State.TrainerWalk, State.Interaction, State.TrainerFight)
+        stateManager.setNextStates(State.AwaitingTrainerEncounter, State.TrainerEncounter, State.TrainerWalk, State.Interaction, State.EncounterTransition, State.TrainerFight)
     
         activeTrainer = trainer
         trainer.wasEncountered()
@@ -260,8 +274,10 @@ function tryInteraction(activeKey, timestamp) {
         bag.add(activeTarget)
     }
 
-    if (stateManager.hasNextState()) stateManager.enterNextState() // TODO: consider adding lock here too
-    else {
+    if (stateManager.hasNextState()) {
+        stateManager.enterNextState() // TODO: consider adding lock here too;
+        lock.lock(ticksPerEncounterTransition) // TODO: MOVE SOMEWHERE ELSE
+    } else {
         stateManager.setNextStates(State.ClosingField, State.Game)
         lock.lock(framesPerClosingField, timestamp)
     }
@@ -315,7 +331,7 @@ function tryPokemonEncounter() {
     if (!playerIsInBush || player.collided()) return
 
     if (encounterOccurs()) { // TODO: also determine which pokemon is encountered
-        stateManager.setNextStates(State.AwaitingPokemonEncounter, State.PokemonEncounter)
+        stateManager.setNextStates(State.AwaitingPokemonEncounter, State.EncounterTransition, State.PokemonEncounter)
     }
 }
 

@@ -10,6 +10,6 @@ export const State = {
     AwaitingTrainerEncounter: 8,
     TrainerEncounter: 9,
     TrainerWalk: 10,
-    Transition: 11,
+    EncounterTransition: 11,
     TrainerFight: 12
 }
