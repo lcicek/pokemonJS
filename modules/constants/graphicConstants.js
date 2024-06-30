@@ -13,7 +13,7 @@ export const CENTER_WIDTH = NORMALIZE_X * SIZE
 export const CENTER_HEIGHT = NORMALIZE_Y * SIZE
 
 const DIALOGUE_HEIGHT = 3
-const DIALOGUE_WIDTH = 14
+const DIALOGUE_WIDTH = 16
 const X_PADDING = 0.5
 const Y_PADDING = 0.5
 export const DIALOGUE_X = X_PADDING * SIZE

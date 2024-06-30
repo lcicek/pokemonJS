@@ -2,8 +2,8 @@ import { Collectable, Sign, Trainer } from "../../logic/objects/gameObject.js"
 import { vegetaF, vegetaFL, vegetaFR } from "../image-loaders/trainerImages.js"
 
 export const ItemNames = {
-    Pokeball: "Pokeball",
-    Potion: "Potion"
+    Pokeball: "POKEBALL",
+    Potion: "POTION"
 }
 
 export const interactables = [

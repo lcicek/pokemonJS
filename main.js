@@ -331,7 +331,7 @@ function tryPokemonEncounter() {
     if (!playerIsInBush || player.collided()) return
 
     if (encounterOccurs()) { // TODO: also determine which pokemon is encountered
-        stateManager.setNextStates(State.AwaitingPokemonEncounter, State.EncounterTransition, State.PokemonEncounter)
+        stateManager.setNextStates(State.AwaitingPokemonEncounter, State.EncounterTransition, State.PokemonFight)
     }
 }
 

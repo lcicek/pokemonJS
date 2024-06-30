@@ -25,7 +25,8 @@ export class Renderer {
     }
 
     setFont() { // TODO: fix error that initial font used is wrong
-        this.context.font = "16px dialogue"
+        this.context.font = "20px dialogue"
+        this.context.fillStyle = "#252525"
     }
 
     gameObjects(gameObjectData) {
@@ -115,6 +116,7 @@ export class Renderer {
     }
 
     transitionBoxes(boxCoordinates) {
+        this.context.fillStyle = "#aa001f"
         for (let boxCoordinate of boxCoordinates) {
             let canvasX = boxCoordinate[0] * SIZE;
             let canvasY = boxCoordinate[1] * SIZE;

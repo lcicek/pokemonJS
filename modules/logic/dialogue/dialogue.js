@@ -1,6 +1,6 @@
 export class Dialogue {
     constructor() {
-        this.maxCharsPerLine = 39
+        this.maxCharsPerLine = 42
         this.textBlock = []
     }
 
