@@ -1,0 +1,4 @@
+- trainer encounter animation frame is off when player walks directly in front of trainer
+- player walk animation and direction are wrong during trainer (encounter) walk
+- trainer encounter is not activated by player interaction key press
+- time handling per game loop iteration is incorrect

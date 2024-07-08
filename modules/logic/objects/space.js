@@ -1,13 +1,15 @@
 import { SIZE } from "../../constants/graphicConstants.js";
 
 class SpaceInterface {    
-    constructor(width, height) {
+    constructor(id, width, height) {
+        this.id = id;
         this.width = width;
         this.height = height;
         this.canvasWidth = width * SIZE
         this.canvasHeight = height * SIZE
         this.collisionMap = [] // override
         this.bushMap = [] // override; TODO: perhaps replace with general object map (0, 1, 2, 3...)
+        this.doorCoordinates = []; // override
     }
 
     collides(x, y) {
@@ -45,13 +47,27 @@ class SpaceInterface {
     refresh() {
 
     }
+
+    getDoorCoordinates() {
+        return this.doorCoordinates;
+    }
+}
+
+export class House extends SpaceInterface {
+    constructor(id, collisionMap) {
+        super(id, collisionMap[0].length, collisionMap.length);
+        this.collisionMap = collisionMap;
+    }
 }
 
 export class Outside extends SpaceInterface {
-    constructor() {
-        super(15, 15)
-
+    constructor(id) {
+        super(id, 15, 15)
         this.collisionsToReadd = []
+
+        this.doorCoordinates = [
+            [4, 9]
+        ]
 
         this.collisionMap = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
