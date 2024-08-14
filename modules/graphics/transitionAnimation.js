@@ -1,12 +1,11 @@
 import { HEIGHT, WIDTH } from "../constants/graphicConstants.js";
-import { iterationsPerEncounterTransition, ticksPerEncounterTransitionIteration } from "../constants/timeConstants.js";
+import { iterationsPerEncounterTransition } from "../constants/timeConstants.js";
 
 class TransitionAnimation {
-    constructor(maxIterations, ticksPerIteration) {
+    constructor(maxIterations) {
         this.columns = WIDTH;
         this.rows = HEIGHT;
         this.maxIterations = maxIterations;
-        this.ticksPerIteration = ticksPerIteration;
     }
 
     getBoxCoordinates() {
@@ -16,12 +15,10 @@ class TransitionAnimation {
 
 export class EncounterTransitionAnimation extends TransitionAnimation {
     constructor() {
-        super(iterationsPerEncounterTransition, ticksPerEncounterTransitionIteration)
+        super(iterationsPerEncounterTransition)
     }
 
     getBoxCoordinates(tick) {
-        tick = Math.floor(tick / this.ticksPerIteration) + 1 // essentially casts tick from range 1 to 2x back to 1 to x, where 2 is ticksPerIteration
-
         let tlColumn = (tick-1) % this.columns;
         let tlRow = Math.floor((tick-1) / this.columns)
         let shouldInverseColumns = tlRow % 2 == 1
@@ -30,6 +27,8 @@ export class EncounterTransitionAnimation extends TransitionAnimation {
 
         let brColumn = this.columns - 1 - tlColumn;
         let brRow = this.rows - 1 - tlRow;
+
+        console.log(tlColumn, tlRow)
 
         return [[tlColumn, tlRow], [brColumn, brRow]];
     }

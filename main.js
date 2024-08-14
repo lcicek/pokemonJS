@@ -11,7 +11,7 @@ import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
 import { Direction } from "./modules/logic/utils/direction.js";
 import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
-import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, ticksPerEncounterTransition, timePerFrameMS } from "./modules/constants/timeConstants.js";
+import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, iterationsPerEncounterTransition } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
@@ -91,7 +91,7 @@ function handleGameLogic(timestamp) {
 
         if (actionType == ActionType.Movement) tryPostMovementAction()
     } else if (stateManager.isInTransitionState()) {
-        lock.lock(ticksPerEncounterTransition)
+        lock.lock(iterationsPerEncounterTransition)
     }
 
     handleTrainerEncounter(timestamp)
@@ -279,7 +279,7 @@ function tryInteraction(activeKey, timestamp) {
 
     if (stateManager.hasNextState()) {
         stateManager.enterNextState() // TODO: consider adding lock here too;
-        lock.lock(ticksPerEncounterTransition) // TODO: MOVE SOMEWHERE ELSE
+        lock.lock(iterationsPerEncounterTransition) // TODO: MOVE SOMEWHERE ELSE
     } else {
         stateManager.setNextStates(State.ClosingField, State.Game)
         lock.lock(framesPerClosingField, timestamp)

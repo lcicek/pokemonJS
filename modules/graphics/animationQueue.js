@@ -21,7 +21,6 @@ export class AnimationQueue {
     animate(tick) {
         if (this.idle) return
 
-        console.log((tick- 1) % framesPerMovement)
         if (this.animation instanceof CharacterAnimation && (tick- 1) % framesPerMovement == 0) this.animation.toggleStep()
         
         // TODO: consider special case where we need to check if the last tick has unlocked the lock

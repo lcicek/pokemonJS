@@ -1,4 +1,5 @@
 import { NORMALIZE_X, NORMALIZE_Y, SIZE } from "../constants/graphicConstants.js"
+import { framesPerMovement } from "../constants/timeConstants.js"
 import { Direction } from "../logic/utils/direction.js"
 
 export class CharacterVisual {
@@ -10,6 +11,7 @@ export class CharacterVisual {
 export class PlayerVisual {
     constructor(player) {
         this.setPosition(player)
+        this.shiftDistance = SIZE / framesPerMovement
     }
 
     setPosition(player) { // TODO: improve performance. perhaps by shifting instead of recalculating
@@ -23,8 +25,8 @@ export class PlayerVisual {
     }
 
     shiftVisual() {
-        this.x -= this.deltas[0]
-        this.y -= this.deltas[1]
+        this.x -= this.deltas[0] * this.shiftDistance
+        this.y -= this.deltas[1] * this.shiftDistance
     }
 
     ensurePositionIsNext() {
