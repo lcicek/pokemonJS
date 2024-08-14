@@ -145,9 +145,10 @@ function handleTrainerEncounterRendering() {
 
     if (stateManager.getActiveState() == State.TrainerWalk) {
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)
-        let shifts = Direction.toScalarDeltas(activeTrainer.direction, lock.getTick())
+        let shifts = Direction.toScalarDeltas(activeTrainer.direction, lock.getTick() * playerVisual.shiftDistance) // TODO: globalize shift distance
 
         renderer.walkingTrainer(activeTrainer.animation.getKeyframe(lock.getTick()), canvasPosition[0], canvasPosition[1], shifts)
+        renderer.player(playerAnimation.lastKeyframe)
         return
     } 
     
