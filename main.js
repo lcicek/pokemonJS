@@ -1,6 +1,6 @@
 import { Renderer } from "./modules/graphics/renderer.js";
 import { addInputDetection, getActiveKey, isMovementKey, keyIsInvalid } from "./modules/inputDetection.js";
-import { enforceFps } from "./modules/time/timeHandler.js";
+import { TimeHandler } from "./modules/time/timeHandler.js";
 import { Player } from "./modules/logic/objects/player.js";
 import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
@@ -11,7 +11,7 @@ import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
 import { Direction } from "./modules/logic/utils/direction.js";
 import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
-import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, ticksPerEncounterTransition } from "./modules/constants/timeConstants.js";
+import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, ticksPerEncounterTransition, timePerFrameMS } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
@@ -37,23 +37,26 @@ let encounterTransitionAnimation = new EncounterTransitionAnimation()
 let lock = new Lock()
 let bag = new Bag()
 let renderer = new Renderer()
+let timeHandler = new TimeHandler()
 
 // TODO: consider changing approach:
-let activeTrainer
-let activeTarget
+let activeTrainer;
+let activeTarget;
 
-async function gameLoop(timestamp) {
-    let wasUnlocked = updateLock(timestamp)
-    let acted = handleGameLogic(timestamp)    
+async function gameLoop(currTime) {
+    window.requestAnimationFrame(gameLoop) // order does not matter, this can also be at end of function
+
+    if (timeHandler.isWaiting(currTime)) return;
+    timeHandler.initiateFrame(currTime)
+
+    let wasUnlocked = updateLock(currTime)
+    let acted = handleGameLogic(currTime)    
     let mustRender = rerenderIsNecessary(acted, wasUnlocked)
 
     handleGameRendering(mustRender)
     handleTrainerEncounterRendering()
     handleDialogueRendering(mustRender)
     renderTransition()
-
-    await enforceFps(timestamp) // needs to be last function in loop (other than recursive call)
-    window.requestAnimationFrame(gameLoop)
 };
 
 function renderTransition() {
