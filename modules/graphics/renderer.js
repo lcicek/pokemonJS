@@ -1,5 +1,5 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, SIZE, CENTER_WIDTH, CENTER_HEIGHT, DIALOGUE_X, DIALOGUE_Y, DIALOGUE_ARROW_X, DIALOGUE_ARROW_Y, DIALOGUE_LINE_1_X, DIALOGUE_LINE_1_Y, DIALOGUE_LINE_2_X, DIALOGUE_LINE_2_Y } from "../constants/graphicConstants.js";
-import { outsideImageBG, outsideImageFG, dialogueBoxImage, downArrowImage, grassImageFG } from "../loaders/image-loaders/backgroundImages.js";
+import { dialogueBoxImage, downArrowImage, grassImageFG } from "../loaders/image-loaders/backgroundImages.js";
 import { l } from "../loaders/image-loaders/characterImages.js";
 import { fightMark } from "../loaders/image-loaders/objectImages.js";
 
@@ -72,9 +72,9 @@ export class Renderer {
         this.context.drawImage(grassImageFG, CENTER_WIDTH - this.shiftX, CENTER_HEIGHT - this.shiftY)
     }
 
-    backgrounds(playerVisualX, playerVisualY) {
+    backgrounds(mapBgImage, playerVisualX, playerVisualY) {
         this.canvasBackground()
-        this.mapBackground(playerVisualX, playerVisualY)
+        this.mapBackground(mapBgImage, playerVisualX, playerVisualY)
     }
 
     canvasBackground() {
@@ -82,12 +82,12 @@ export class Renderer {
         this.context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
     }
 
-    mapBackground(x, y) {
-        this.context.drawImage(outsideImageBG, x, y)
+    mapBackground(bgImage, x, y) {
+        this.context.drawImage(bgImage, x, y)
     }
 
-    mapForeground(x, y) {
-        this.context.drawImage(outsideImageFG, x, y)
+    mapForeground(fgImage, x, y) {
+        this.context.drawImage(fgImage, x, y)
     }
 
     player(playerKeyFrame) {

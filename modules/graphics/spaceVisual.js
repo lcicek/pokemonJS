@@ -1,0 +1,3 @@
+class SpaceVisual {
+    constructor(image, )
+}

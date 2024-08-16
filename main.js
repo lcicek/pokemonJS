@@ -5,7 +5,6 @@ import { Player } from "./modules/logic/objects/player.js";
 import { MovementHandler } from "./modules/logic/main-game/movementHandler.js";
 import { MenuNavigator } from "./modules/logic/menus/navigator.js";
 import { StateManager } from "./modules/logic/state/stateManager.js";
-import { Outside } from "./modules/logic/objects/space.js";
 import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
@@ -23,8 +22,8 @@ import { Bag } from "./modules/logic/objects/bag.js";
 import { ActionType } from "./modules/constants/dictionaries/actionType.js";
 import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
 import { EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
+import { outside } from "./modules/loaders/space-loaders/outside.js";
 
-let outside = new Outside()
 let player = new Player(8, 8)
 let playerAnimation = new PlayerAnimation()
 let playerVisual = new PlayerVisual(player);
@@ -114,6 +113,7 @@ function tryAction(key, timestamp) {
 }
 
 function tryPostMovementAction() {
+    tryDoor()
     tryBush()
     tryPokemonEncounter()
     tryTrainerEncounter()
@@ -204,7 +204,7 @@ function renderGame(...gameComponents) {
     renderer.setShift(playerVisual.getRemainingShifts())
 
     // always render backgrounds, game objects and foregrounds regardless of provided components:
-    renderer.backgrounds(playerVisual.x, playerVisual.y)
+    renderer.backgrounds(outside.bgImage, playerVisual.x, playerVisual.y)
     let [backgroundGameObjects, foregroundGameObjects] = getGameObjectsForRendering(player.x, player.y)
     
     if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
@@ -216,7 +216,7 @@ function renderGame(...gameComponents) {
     }
 
     if (foregroundGameObjects.length > 0) renderer.gameObjects(foregroundGameObjects)
-    renderer.mapForeground(playerVisual.x, playerVisual.y)
+    renderer.mapForeground(outside.fgImage, playerVisual.x, playerVisual.y)
 }
 
 function tryTrainerEncounter() {
@@ -234,6 +234,13 @@ function tryTrainerEncounter() {
 function tryUpdateIntermediateState() {
     if (stateManager.hasNextState() && !stateManager.isInInteractionState()) {
         stateManager.enterNextState()
+    }
+}
+
+function tryDoor() {
+    if (outside.isDoor(player.x, player.y)) {
+        // TODO: fix this
+        //stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition)
     }
 }
 

@@ -28,8 +28,6 @@ export class EncounterTransitionAnimation extends TransitionAnimation {
         let brColumn = this.columns - 1 - tlColumn;
         let brRow = this.rows - 1 - tlRow;
 
-        console.log(tlColumn, tlRow)
-
         return [[tlColumn, tlRow], [brColumn, brRow]];
     }
 }

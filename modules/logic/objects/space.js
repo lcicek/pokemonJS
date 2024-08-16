@@ -1,15 +1,18 @@
-import { SIZE } from "../../constants/graphicConstants.js";
+export class Space {    
+    constructor(spaceId, bgImage, fgImage, level, collisionMap, bushMap, doors) {
+        this.spaceId = spaceId;
 
-class SpaceInterface {    
-    constructor(id, width, height) {
-        this.id = id;
-        this.width = width;
-        this.height = height;
-        this.canvasWidth = width * SIZE
-        this.canvasHeight = height * SIZE
-        this.collisionMap = [] // override
-        this.bushMap = [] // override; TODO: perhaps replace with general object map (0, 1, 2, 3...)
-        this.doorCoordinates = []; // override
+        this.bgImage = bgImage;
+        this.fgImage = fgImage;
+        
+        this.level = level;
+        this.collisionMap = collisionMap;
+        this.bushMap = bushMap;
+        this.doors = doors;
+
+        this.width = collisionMap[0].length;
+        this.height = collisionMap.length;
+        this.collisionsToReadd = []
     }
 
     collides(x, y) {
@@ -18,6 +21,14 @@ class SpaceInterface {
 
     isBush(x, y) {
         return this.bushMap[y][x] == 1
+    }
+
+    isDoor(x, y) {
+        for (let door of this.doors) {
+            if (door.isEntered(x, y)) return true;
+        }
+
+        return false;
     }
 
     removeCollision(x, y) {
@@ -42,67 +53,5 @@ class SpaceInterface {
     temporarilyRemoveCollision(x, y) {
         this.collisionMap[y][x] = 0
         this.collisionsToReadd.push([x, y])
-    }
-
-    refresh() {
-
-    }
-
-    getDoorCoordinates() {
-        return this.doorCoordinates;
-    }
-}
-
-export class House extends SpaceInterface {
-    constructor(id, collisionMap) {
-        super(id, collisionMap[0].length, collisionMap.length);
-        this.collisionMap = collisionMap;
-    }
-}
-
-export class Outside extends SpaceInterface {
-    constructor(id) {
-        super(id, 15, 15)
-        this.collisionsToReadd = []
-
-        this.doorCoordinates = [
-            [4, 9]
-        ]
-
-        this.collisionMap = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        ]
-
-        this.bushMap = [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ]
     }
 }

@@ -1,9 +1,3 @@
-export const outsideImageBG = new Image()
-outsideImageBG.src = "./assets/map/default-map-background.png"
-
-export const outsideImageFG = new Image()
-outsideImageFG.src = "./assets/map/default-map-foreground.png"
-
 export const grassImageFG = new Image()
 grassImageFG.src = "./assets/background-sprites/grass-foreground.png"
 

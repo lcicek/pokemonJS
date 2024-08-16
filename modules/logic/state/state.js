@@ -11,5 +11,9 @@ export const State = {
     TrainerEncounter: 9,
     TrainerWalk: 10,
     EncounterTransition: 11,
-    TrainerFight: 12
+    TrainerFight: 12,
+    AwaitingDoorEntry: 13,
+    DoorEntryTransition: 14,
+    BlackScreen: 15,
+    DoorExitTransition: 16
 }
