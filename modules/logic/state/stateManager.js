@@ -66,10 +66,32 @@ export class StateManager {
               (this.state == State.Interaction && this.getNextState() == State.EncounterTransition) 
     }
 
-    isInTransitionState() {
-        return this.state == State.EncounterTransition // TODO: add different transition states here
+    isInDoorTransitionState() {
+        return this.isInDoorEntryTransitionState() || this.isInDoorExitTransitionState()
     }
 
+    isInDoorEntryTransitionState() {
+        return this.state == State.DoorEntryTransition
+    }
+
+    isInDoorExitTransitionState() {
+        return this.state == State.DoorExitTransition
+    }
+
+    isInBlackScreenTransitionState() {
+        return this.state == State.BlackScreen
+    }
+
+    isInEncounterTransitionState() {
+        return this.state == State.EncounterTransition
+    }
+
+    // Ongoing-TODO: add different transition states here
+    isInTransitionState() {
+        return this.isInEncounterTransitionState() || this.isInDoorTransitionState() || this.isInBlackScreenTransitionState()
+    }
+
+    // Ongoing-TODO: add awaiting states here
     isInAwaitingState() {
         return this.state == State.AwaitingPokemonEncounter ||
                 this.state == State.AwaitingTrainerEncounter ||

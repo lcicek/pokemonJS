@@ -10,7 +10,7 @@ import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
 import { Direction } from "./modules/logic/utils/direction.js";
 import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
-import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, iterationsPerEncounterTransition } from "./modules/constants/timeConstants.js";
+import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, iterationsPerBlackScreen, iterationsPerDoorTransition, iterationsPerEncounterTransition } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
 import { GrassAnimation, PlayerAnimation } from "./modules/graphics/animation.js";
@@ -21,22 +21,27 @@ import { Collectable } from "./modules/logic/objects/gameObject.js";
 import { Bag } from "./modules/logic/objects/bag.js";
 import { ActionType } from "./modules/constants/dictionaries/actionType.js";
 import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
-import { EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
+import { DoorEntryTransitionAnimation, DoorExitTransitionAnimation, EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
 import { outside } from "./modules/loaders/space-loaders/outside.js";
 
-let player = new Player(8, 8)
-let playerAnimation = new PlayerAnimation()
+let player = new Player(8, 8);
 let playerVisual = new PlayerVisual(player);
-let stateManager = new StateManager()
+let stateManager = new StateManager();
 let menuNavigator;
-let dialogue = new Dialogue()
-let bushManager = new BushManager()
-let grassAnimation = new GrassAnimation()
-let encounterTransitionAnimation = new EncounterTransitionAnimation()
-let lock = new Lock()
-let bag = new Bag()
-let renderer = new Renderer()
-let timeHandler = new TimeHandler()
+let dialogue = new Dialogue();
+let bushManager = new BushManager();
+let lock = new Lock();
+let bag = new Bag();
+let renderer = new Renderer();
+let timeHandler = new TimeHandler();
+
+
+// animations:
+let playerAnimation = new PlayerAnimation();
+let grassAnimation = new GrassAnimation();
+let encounterTransitionAnimation = new EncounterTransitionAnimation();
+let doorEntryTransitionAnimation = new DoorEntryTransitionAnimation();
+let doorExitTransitionAnimation = new DoorExitTransitionAnimation();
 
 // TODO: consider changing approach:
 let activeTrainer;
@@ -55,14 +60,24 @@ async function gameLoop(currTime) {
     handleGameRendering(mustRender)
     handleTrainerEncounterRendering()
     handleDialogueRendering(mustRender)
-    renderTransition()
+    handleTransitionRendering()
 };
 
-function renderTransition() {
+function handleTransitionRendering() {
     if (!stateManager.isInTransitionState() || lock.isUnlocked()) return;
 
-    let boxCoordinates = encounterTransitionAnimation.getBoxCoordinates(lock.getTick());
-    renderer.transitionBoxes(boxCoordinates)
+    if (stateManager.isInEncounterTransitionState()) {
+        let boxCoordinates = encounterTransitionAnimation.getBoxCoordinates(lock.getTick());
+        renderer.transitionBoxes(boxCoordinates)
+    } else if (stateManager.isInDoorEntryTransitionState()) {
+        let opacity = doorEntryTransitionAnimation.getOpacity(lock.getTick())
+        renderer.doorTransition(opacity)
+    } else if (stateManager.isInDoorExitTransitionState()) {
+        let opacity = doorExitTransitionAnimation.getOpacity(lock.getTick())
+        renderer.doorTransition(opacity)
+    } else if (stateManager.isInBlackScreenTransitionState()) {
+        renderer.doorTransition(1)
+    }
 }
 
 function updateLock(timestamp) {
@@ -72,7 +87,7 @@ function updateLock(timestamp) {
 }
 
 function rerenderIsNecessary(acted, wasUnlocked) {
-    if (stateManager.isInTransitionState() || stateManager.isInFightState()) return false
+    if (stateManager.isInEncounterTransitionState() || stateManager.isInFightState()) return false
 
     return acted || lock.isLocked() || wasUnlocked || !bushManager.isIdle()
 }
@@ -89,8 +104,12 @@ function handleGameLogic(timestamp) {
         acted = actionType != ActionType.None
 
         if (actionType == ActionType.Movement) tryPostMovementAction()
-    } else if (stateManager.isInTransitionState()) {
+    } else if (stateManager.isInEncounterTransitionState()) {
         lock.lock(iterationsPerEncounterTransition)
+    } else if (stateManager.isInDoorTransitionState()) {
+        lock.lock(iterationsPerDoorTransition)
+    } else if (stateManager.isInBlackScreenTransitionState()) {
+        lock.lock(iterationsPerBlackScreen)
     }
 
     handleTrainerEncounter(timestamp)
@@ -239,8 +258,7 @@ function tryUpdateIntermediateState() {
 
 function tryDoor() {
     if (outside.isDoor(player.x, player.y)) {
-        // TODO: fix this
-        stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition)
+        stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition, State.Game)
     }
 }
 

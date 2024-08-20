@@ -1,5 +1,5 @@
 import { HEIGHT, WIDTH } from "../constants/graphicConstants.js";
-import { iterationsPerEncounterTransition } from "../constants/timeConstants.js";
+import { iterationsPerDoorTransition, iterationsPerEncounterTransition } from "../constants/timeConstants.js";
 
 class TransitionAnimation {
     constructor(maxIterations) {
@@ -29,5 +29,38 @@ export class EncounterTransitionAnimation extends TransitionAnimation {
         let brRow = this.rows - 1 - tlRow;
 
         return [[tlColumn, tlRow], [brColumn, brRow]];
+    }
+}
+
+export class DoorTransitionAnimation extends TransitionAnimation {
+    constructor() {
+        super(iterationsPerDoorTransition);
+
+        this.opacitySectionSize = iterationsPerDoorTransition / 20; // TODO: move 20 to constants
+        this.opacityStep = 1 / 20
+    }
+
+    getOpacity(tick) {
+        let normalizedTick = tick - 1;
+        let section = (normalizedTick / this.opacitySectionSize) + 1;
+        return section * this.opacityStep
+    }
+}
+
+export class DoorEntryTransitionAnimation extends DoorTransitionAnimation {
+    constructor() {
+        super();
+    }
+}
+
+export class DoorExitTransitionAnimation extends DoorTransitionAnimation {
+    constructor() {
+        super();
+    }
+
+    getOpacity(tick) {
+        let normalizedTick = tick - 1;
+        let section = (normalizedTick / this.opacitySectionSize) + 1;
+        return 1 - (section * this.opacityStep) // invert because we go from dark to light / opacity of black decreases
     }
 }

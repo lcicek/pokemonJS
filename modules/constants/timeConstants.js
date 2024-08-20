@@ -16,4 +16,7 @@ export const ticksPerMovementKeyframe = framesPerMovement / 2
 export const ticksPerGrassKeyframe = framesPerGrassAnimation / 4
 export const ticksPerFightMarkKeyframe = framesPerFightMark / 1 // TODO: update once sprites are ready
 
+// TODO: formalize when to use iterations and when to use ticks
 export const iterationsPerEncounterTransition = Math.floor((WIDTH * HEIGHT) / 2) + 1
+export const iterationsPerDoorTransition = 80
+export const iterationsPerBlackScreen = 40
