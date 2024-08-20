@@ -24,7 +24,7 @@ import { NavigationType } from "./modules/constants/dictionaries/navigationType.
 import { DoorEntryTransitionAnimation, DoorExitTransitionAnimation, EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
 import { outside } from "./modules/loaders/space-loaders/outside.js";
 
-let player = new Player(8, 8);
+let player = new Player(7, 7);
 let playerVisual = new PlayerVisual(player);
 let stateManager = new StateManager();
 let menuNavigator;
