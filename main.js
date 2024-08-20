@@ -159,7 +159,7 @@ function handleTrainerEncounterRendering() {
 }
 
 function prepareGameRendering() {
-    if (!stateManager.isInGameState() && !stateManager.isAwaitingAnyEncounter()) return
+    if (!stateManager.isInGameState() && !stateManager.isInAwaitingState()) return
 
     // prepare player/movement rendering:
     if (lock.isLocked()) {
@@ -240,7 +240,7 @@ function tryUpdateIntermediateState() {
 function tryDoor() {
     if (outside.isDoor(player.x, player.y)) {
         // TODO: fix this
-        //stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition)
+        stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition)
     }
 }
 

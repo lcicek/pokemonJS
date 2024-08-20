@@ -14,6 +14,7 @@ export class PlayerVisual {
         this.shiftDistance = SIZE / framesPerMovement
     }
 
+    // sets canvas position
     setPosition(player) { // TODO: improve performance. perhaps by shifting instead of recalculating
         this.x = (-player.prevX + NORMALIZE_X) * SIZE
         this.y = (-player.prevY + NORMALIZE_Y) * SIZE
@@ -23,7 +24,7 @@ export class PlayerVisual {
 
         this.deltas = Direction.toDeltas(player.direction)
     }
-
+    
     shiftVisual() {
         this.x -= this.deltas[0] * this.shiftDistance
         this.y -= this.deltas[1] * this.shiftDistance

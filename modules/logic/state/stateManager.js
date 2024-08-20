@@ -45,7 +45,7 @@ export class StateManager {
     }
 
     isInGameState() {
-        return this.state == State.Game || this.state == State.AwaitingPokemonEncounter // TODO: inspect
+        return this.state == State.Game || this.isInAwaitingState() // TODO: inspect
     }
 
     isInInteractionState() {
@@ -54,10 +54,6 @@ export class StateManager {
 
     isInMenuState() {
         return this.state == State.Menu
-    }
-
-    isAwaitingPokemonEncounter() {
-        return this.state == State.AwaitingPokemonEncounter
     }
 
     isInFightState() {
@@ -74,12 +70,10 @@ export class StateManager {
         return this.state == State.EncounterTransition // TODO: add different transition states here
     }
 
-    isAwaitingTrainerEncounter() {
-        return this.state == State.AwaitingTrainerEncounter
-    }
-
-    isAwaitingAnyEncounter() {
-        return this.isAwaitingPokemonEncounter() || this.isAwaitingTrainerEncounter()
+    isInAwaitingState() {
+        return this.state == State.AwaitingPokemonEncounter ||
+                this.state == State.AwaitingTrainerEncounter ||
+                this.state == State.AwaitingDoorEntry
     }
 
     isInClosingFieldState() {
