@@ -90,7 +90,7 @@ function updateLock(timestamp) {
 
 function rerenderIsNecessary(acted, wasUnlocked) {
     if (stateManager.isInEncounterTransitionState() || stateManager.isInFightState()) return false
-    
+
     return acted || lock.isLocked() || wasUnlocked || !bushManager.isIdle()
 }
 
@@ -250,7 +250,7 @@ function tryTrainerEncounter() {
     
         activeTrainer = trainer
         trainer.wasEncountered()
-        spaceManager.removeCollision(activeTrainer.x, activeTrainer.y)
+        spaceManager.removeCollisionFromSpace(activeTrainer.x, activeTrainer.y)
     }
 }
 
@@ -303,7 +303,7 @@ function tryInteraction(activeKey, timestamp) {
 
     if (activeTarget instanceof Collectable) {
         activeTarget.collect()
-        spaceManager.activeSpace.removeCollision(activeTarget.x, activeTarget.y)
+        spaceManager.removeCollisionFromSpace(activeTarget.x, activeTarget.y)
         bag.add(activeTarget)
     }
 

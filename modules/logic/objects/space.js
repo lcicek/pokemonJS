@@ -20,8 +20,6 @@ export class Space {
     }
 
     collides(x, y) {
-        console.log(x, y)
-        console.log(this.isOutOfBounds())
         return this.isOutOfBounds(x, y) || this.collisionMap[y][x] == 1
     }
 
