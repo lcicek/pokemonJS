@@ -4,22 +4,22 @@ var coordinatesDisplay = document.getElementById("coordinatesDisplay")
 var prevCoordinatesDisplay = document.getElementById("prevCoordinatesDisplay")
 var directionDisplay = document.getElementById("directionDisplay")
 
-// Interface between Player and Outside
+// Interface between Player and Space
 export class MovementHandler { // TODO: decide whether class as a wrapper for static functions makes sense
     
     // returns true if movement occured:
-    static movePlayer(player, outside, deltas) {
+    static movePlayer(player, space, deltas) {
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
 
-        if (outside.collides(targetX, targetY)) {
+        if (space.collides(targetX, targetY)) {
             player.prevX = player.x
             player.prevY = player.y
 
             return true
         }
 
-        if (targetX < outside.width && targetY < outside.height && targetX >= 0 && targetY >= 0) {
+        if (targetX < space.width && targetY < space.height && targetX >= 0 && targetY >= 0) {
             player.prevX = player.x
             player.prevY = player.y
 
@@ -32,14 +32,14 @@ export class MovementHandler { // TODO: decide whether class as a wrapper for st
         return false
     }
 
-    static tryMovement(player, outside, key) {
+    static tryMovement(player, space, key) {
         let moved = false
         let deltas = Direction.toDeltas(key) // get direction of movement
         
         // if movement / direction is valid (only w/a/s/d):
         if (deltas != null) {
             player.setDirection(key)
-            moved = this.movePlayer(player, outside, deltas)
+            moved = this.movePlayer(player, space, deltas)
         }
     
         coordinatesDisplay.textContent = `(${player.x},${player.y})`

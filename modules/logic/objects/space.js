@@ -15,20 +15,28 @@ export class Space {
         this.collisionsToReadd = []
     }
 
+    isOutOfBounds(x, y) {
+        return x < 0 || y < 0 || x >= this.width || y >= this.height;
+    }
+
     collides(x, y) {
-        return this.collisionMap[y][x] == 1
+        console.log(x, y)
+        console.log(this.isOutOfBounds())
+        return this.isOutOfBounds(x, y) || this.collisionMap[y][x] == 1
     }
 
     isBush(x, y) {
-        return this.bushMap[y][x] == 1
+        if (this.bushMap == null) return false;
+
+        return this.bushMap[y][x] == 1;
     }
 
-    isDoor(x, y) {
+    getDoor(x, y) {
         for (let door of this.doors) {
-            if (door.isEntered(x, y)) return true;
+            if (door.isEntered(x, y)) return door;
         }
 
-        return false;
+        return null;
     }
 
     removeCollision(x, y) {
@@ -53,5 +61,9 @@ export class Space {
     temporarilyRemoveCollision(x, y) {
         this.collisionMap[y][x] = 0
         this.collisionsToReadd.push([x, y])
+    }
+
+    hasForeground() {
+        return this.fgImage != null;
     }
 }

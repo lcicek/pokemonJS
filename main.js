@@ -23,6 +23,7 @@ import { ActionType } from "./modules/constants/dictionaries/actionType.js";
 import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
 import { DoorEntryTransitionAnimation, DoorExitTransitionAnimation, EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
 import { outside } from "./modules/loaders/space-loaders/outside.js";
+import { SpaceManager } from "./modules/logic/main-game/spaceManager.js";
 
 let player = new Player(7, 7);
 let playerVisual = new PlayerVisual(player);
@@ -35,6 +36,7 @@ let bag = new Bag();
 let renderer = new Renderer();
 let timeHandler = new TimeHandler();
 
+let spaceManager = new SpaceManager();
 
 // animations:
 let playerAnimation = new PlayerAnimation();
@@ -88,7 +90,7 @@ function updateLock(timestamp) {
 
 function rerenderIsNecessary(acted, wasUnlocked) {
     if (stateManager.isInEncounterTransitionState() || stateManager.isInFightState()) return false
-
+    
     return acted || lock.isLocked() || wasUnlocked || !bushManager.isIdle()
 }
 
@@ -109,6 +111,8 @@ function handleGameLogic(timestamp) {
     } else if (stateManager.isInDoorTransitionState()) {
         lock.lock(iterationsPerDoorTransition)
     } else if (stateManager.isInBlackScreenTransitionState()) {
+        spaceManager.updateActiveSpace(player)
+        playerVisual.setPosition(player)
         lock.lock(iterationsPerBlackScreen)
     }
 
@@ -151,7 +155,7 @@ function handleTrainerEncounter(timestamp) {
         activeTrainer.walk()
     } else if (state == State.Interaction) {
         activeTrainer.stand()
-        outside.addCollision(activeTrainer.nextX, activeTrainer.nextY) // TODO: check if causes issues
+        spaceManager.addCollisionToSpace(activeTrainer.nextX, activeTrainer.nextY)
         dialogue.setText(activeTrainer.text)   
         return // i.e. don't lock since user has to press key 
     }
@@ -217,13 +221,13 @@ function renderGame(...gameComponents) {
     let grassKeyframes = grassAnimation.getKeyframes(bushManager.getTicks())
     let relativeGrassCoordinates = bushManager.getRelativeCoordinates(player.x, player.y)
     
-    let bushShouldBeRendered = outside.isBush(player.x, player.y)
+    let bushShouldBeRendered = spaceManager.isBush(player.x, player.y)
     if (lock.isLocked() && !bushManager.isIdle()) bushShouldBeRendered = bushShouldBeRendered && (!Direction.north(player.direction) || lock.isLastTick())
 
     renderer.setShift(playerVisual.getRemainingShifts())
 
     // always render backgrounds, game objects and foregrounds regardless of provided components:
-    renderer.backgrounds(outside.bgImage, playerVisual.x, playerVisual.y)
+    renderer.backgrounds(spaceManager.activeSpace.bgImage, playerVisual.x, playerVisual.y)
     let [backgroundGameObjects, foregroundGameObjects] = getGameObjectsForRendering(player.x, player.y)
     
     if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
@@ -235,7 +239,7 @@ function renderGame(...gameComponents) {
     }
 
     if (foregroundGameObjects.length > 0) renderer.gameObjects(foregroundGameObjects)
-    renderer.mapForeground(outside.fgImage, playerVisual.x, playerVisual.y)
+    if (spaceManager.spaceHasForeground()) renderer.mapForeground(spaceManager.activeSpace.fgImage, playerVisual.x, playerVisual.y)
 }
 
 function tryTrainerEncounter() {
@@ -246,7 +250,7 @@ function tryTrainerEncounter() {
     
         activeTrainer = trainer
         trainer.wasEncountered()
-        outside.removeCollision(activeTrainer.x, activeTrainer.y)
+        spaceManager.removeCollision(activeTrainer.x, activeTrainer.y)
     }
 }
 
@@ -257,13 +261,13 @@ function tryUpdateIntermediateState() {
 }
 
 function tryDoor() {
-    if (outside.isDoor(player.x, player.y)) {
+    if (spaceManager.isDoor(player.x, player.y)) {
         stateManager.setNextStates(State.AwaitingDoorEntry, State.DoorEntryTransition, State.BlackScreen, State.DoorExitTransition, State.Game)
     }
 }
 
 function tryBush() {    
-    if (!player.collided() && outside.isBush(player.x, player.y)) {
+    if (!player.collided() && spaceManager.isBush(player.x, player.y)) {
         bushManager.add(player.x, player.y)
     }
 }
@@ -299,7 +303,7 @@ function tryInteraction(activeKey, timestamp) {
 
     if (activeTarget instanceof Collectable) {
         activeTarget.collect()
-        outside.removeCollision(activeTarget.x, activeTarget.y)
+        spaceManager.activeSpace.removeCollision(activeTarget.x, activeTarget.y)
         bag.add(activeTarget)
     }
 
@@ -356,7 +360,7 @@ function tryMenu(activeKey, timestamp) {
 }
 
 function tryPokemonEncounter() {
-    let playerIsInBush = outside.isBush(player.x, player.y)
+    let playerIsInBush = spaceManager.isBush(player.x, player.y)
     if (!playerIsInBush || player.collided()) return
 
     if (encounterOccurs()) { // TODO: also determine which pokemon is encountered
@@ -368,7 +372,7 @@ function tryMovement(activeKey, timestamp) {
     if (lock.isLocked() || !stateManager.isInGameState() || !isMovementKey(activeKey)) return false
     if (!stateManager.isInGameState()) return false
 
-    let moved = MovementHandler.tryMovement(player, outside, activeKey) // will update player location and direction
+    let moved = MovementHandler.tryMovement(player, spaceManager.activeSpace, activeKey) // will update player location and direction
     lock.lock(framesPerMovement, timestamp)
 
     playerAnimation.setKeyframeCycle(player.direction)
@@ -381,7 +385,7 @@ window.onload = function() {
     addInputDetection()
 
     let collisionCoordinates = getGameObjectCollisions()
-    outside.addCollisions(collisionCoordinates)
+    spaceManager.activeSpace.addCollisions(collisionCoordinates)
 
     renderer.initialize()
     renderGame(GC.Player, GC.Bush) // initial render

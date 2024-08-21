@@ -127,7 +127,6 @@ export class Renderer {
 
     doorTransition(opacity) {
         this.context.fillStyle = "rgba(0, 0, 0, " + opacity + ")";
-        console.log(this.context.fillStyle)
         this.context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
     }
 }
