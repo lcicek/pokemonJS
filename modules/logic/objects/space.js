@@ -1,5 +1,5 @@
 export class Space {    
-    constructor(spaceId, bgImage, fgImage, level, collisionMap, bushMap, doors) {
+    constructor(spaceId, bgImage, fgImage, level, collisionMap, bushMap, doors, interactables, trainers) {
         this.spaceId = spaceId;
 
         this.bgImage = bgImage;
@@ -9,6 +9,8 @@ export class Space {
         this.collisionMap = collisionMap;
         this.bushMap = bushMap;
         this.doors = doors;
+        this.interactables = interactables;
+        this.trainers = trainers;
 
         this.width = collisionMap[0].length;
         this.height = collisionMap.length;

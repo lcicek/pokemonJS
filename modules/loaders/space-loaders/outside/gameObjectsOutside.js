@@ -1,10 +1,6 @@
-import { Collectable, Sign, Trainer } from "../../logic/objects/gameObject.js"
-import { vegetaF, vegetaFL, vegetaFR } from "../image-loaders/trainerImages.js"
-
-export const ItemNames = {
-    Pokeball: "POKEBALL",
-    Potion: "POTION"
-}
+import { Collectable, Sign, Trainer } from "../../../logic/objects/gameObject.js";
+import { vegetaF, vegetaFL, vegetaFR } from "../../image-loaders/trainerImages.js";
+import { ItemNames } from "../../../constants/dictionaries/outsideItems.js";
 
 export const interactables = [
     new Collectable(6, 4, ItemNames.Potion),

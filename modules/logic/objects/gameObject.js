@@ -110,7 +110,7 @@ export class Trainer extends GameObject {
         return false
     }
 
-    wasEncountered() {
+    setToEncountered() {
         this.encountered = true
     }
 

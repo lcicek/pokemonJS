@@ -9,7 +9,6 @@ import { encounterOccurs } from "./modules/logic/main-game/pokemonEncounter.js";
 import { State } from "./modules/logic/state/state.js";
 import { Key } from "./modules/constants/dictionaries/key.js";
 import { Direction } from "./modules/logic/utils/direction.js";
-import { getGameObjectCollisions, getGameObjectsForRendering, trainerIsEncountered, tryGettingGameObject } from "./modules/logic/utils/gameObjectMethods.js";
 import { framesPerClosingField, framesPerFightMark, framesPerMovement, framesPerNavigation, iterationsPerBlackScreen, iterationsPerDoorTransition, iterationsPerEncounterTransition } from "./modules/constants/timeConstants.js";
 import { Lock } from "./modules/time/lock.js"
 import { Dialogue } from "./modules/logic/dialogue/dialogue.js";
@@ -22,7 +21,6 @@ import { Bag } from "./modules/logic/objects/bag.js";
 import { ActionType } from "./modules/constants/dictionaries/actionType.js";
 import { NavigationType } from "./modules/constants/dictionaries/navigationType.js";
 import { DoorEntryTransitionAnimation, DoorExitTransitionAnimation, EncounterTransitionAnimation } from "./modules/graphics/transitionAnimation.js";
-import { outside } from "./modules/loaders/space-loaders/outside.js";
 import { SpaceManager } from "./modules/logic/main-game/spaceManager.js";
 
 let player = new Player(7, 7);
@@ -228,7 +226,7 @@ function renderGame(...gameComponents) {
 
     // always render backgrounds, game objects and foregrounds regardless of provided components:
     renderer.backgrounds(spaceManager.activeSpace.bgImage, playerVisual.x, playerVisual.y)
-    let [backgroundGameObjects, foregroundGameObjects] = getGameObjectsForRendering(player.x, player.y)
+    let [backgroundGameObjects, foregroundGameObjects] = spaceManager.getGameObjectsForRendering(player.x, player.y)
     
     if (backgroundGameObjects.length > 0) renderer.gameObjects(backgroundGameObjects)
 
@@ -243,13 +241,13 @@ function renderGame(...gameComponents) {
 }
 
 function tryTrainerEncounter() {
-    let trainer = trainerIsEncountered(player.x, player.y)
+    let trainer = spaceManager.trainerIsEncountered(player.x, player.y)
 
     if (trainer != null) {
         stateManager.setNextStates(State.AwaitingTrainerEncounter, State.TrainerEncounter, State.TrainerWalk, State.Interaction, State.EncounterTransition, State.TrainerFight)
     
         activeTrainer = trainer
-        trainer.wasEncountered()
+        trainer.setToEncountered()
         spaceManager.removeCollisionFromSpace(activeTrainer.x, activeTrainer.y)
     }
 }
@@ -278,7 +276,7 @@ function tryInteraction(activeKey, timestamp) {
         let deltas = Direction.toDeltas(player.direction)
         let targetX = player.x + deltas[0]
         let targetY = player.y + deltas[1]
-        let target = tryGettingGameObject(targetX, targetY)
+        let target = spaceManager.tryGettingGameObject(targetX, targetY)
         
         if (target == null) return false
 
@@ -384,8 +382,8 @@ function tryMovement(activeKey, timestamp) {
 window.onload = function() {
     addInputDetection()
 
-    let collisionCoordinates = getGameObjectCollisions()
-    spaceManager.activeSpace.addCollisions(collisionCoordinates)
+    spaceManager.initializeSpaces()
+    spaceManager.initializeInteractableCollisions()
 
     renderer.initialize()
     renderGame(GC.Player, GC.Bush) // initial render

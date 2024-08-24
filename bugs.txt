@@ -3,3 +3,4 @@
 - trainer encounter is not activated by player interaction key press
 - game objects need to be tied to space
 - grass animation needs to be sped up after time changes
+- trainer position and collision handling after space swaps
