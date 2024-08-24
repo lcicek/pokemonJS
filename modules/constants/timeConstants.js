@@ -9,7 +9,7 @@ export const timePerFrameMS = timePerFrame * 1000 // in ms
 export const framesPerMovement = 16
 export const framesPerNavigation = 16
 export const framesPerClosingField = 16
-export const framesPerGrassAnimation = 16 * framesPerMovement // 192
+export const framesPerGrassAnimation = 4 * framesPerMovement // 64
 export const framesPerFightMark = 32
 
 export const ticksPerMovementKeyframe = framesPerMovement / 2

@@ -1,5 +1,2 @@
-- player walk animation and direction are wrong during trainer (encounter) walk
-- trainer encounter is not activated by player interaction key press
-- game objects need to be tied to space
-- grass animation needs to be sped up after time changes
+- trainer encounter is not activated by player interaction key press (todo: draw sprites)
 - trainer position and collision handling after space swaps
