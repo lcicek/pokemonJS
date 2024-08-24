@@ -21,4 +21,11 @@ export class Player {
     collided() {
         return this.prevX == this.x && this.prevY == this.y
     }
+
+    isNextToTrainer(trainerX, trainerY) {
+        let xDiff = trainerX - this.x;
+        let yDiff = trainerY - this.y;
+
+        return xDiff == 0 && Math.abs(yDiff) == 1 || Math.abs(xDiff) == 1 && yDiff == 0
+    }
 }

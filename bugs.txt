@@ -1,4 +1,3 @@
-- trainer encounter animation frame is off when player walks directly in front of trainer
 - player walk animation and direction are wrong during trainer (encounter) walk
 - trainer encounter is not activated by player interaction key press
 - game objects need to be tied to space

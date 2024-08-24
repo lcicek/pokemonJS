@@ -148,12 +148,12 @@ function handleTrainerEncounter(timestamp) {
 
     if (state == State.TrainerEncounter) {
         lockDuration = framesPerFightMark*2
-    } else if (state == State.TrainerWalk) {
-        lockDuration = framesPerMovement * activeTrainer.setNextPosition(player.x, player.y)
-        activeTrainer.walk()
+    } else if (state == State.TrainerWalk && !player.isNextToTrainer(activeTrainer.x, activeTrainer.y)) {
+        let trainerSteps = activeTrainer.walk(player.x, player.y);
+        lockDuration = framesPerMovement * trainerSteps;
     } else if (state == State.Interaction) {
         activeTrainer.stand()
-        spaceManager.addCollisionToSpace(activeTrainer.nextX, activeTrainer.nextY)
+        spaceManager.addCollisionToSpace(activeTrainer.x, activeTrainer.y)
         dialogue.setText(activeTrainer.text)   
         return // i.e. don't lock since user has to press key 
     }
@@ -162,7 +162,8 @@ function handleTrainerEncounter(timestamp) {
 }
 
 function handleTrainerEncounterRendering() {
-    if (!stateManager.isInTrainerEncounterState() || stateManager.getActiveState() == State.Interaction) return
+    if (!stateManager.isInTrainerEncounterState() || stateManager.getActiveState() == State.Interaction) return;
+    if (stateManager.getActiveState() == State.TrainerWalk && activeTrainer.isStill()) return;
 
     if (stateManager.getActiveState() == State.TrainerWalk) {
         let canvasPosition = activeTrainer.getCanvasPosition(player.x, player.y)

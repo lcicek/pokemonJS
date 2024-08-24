@@ -70,14 +70,22 @@ export class Trainer extends GameObject {
         return this.still
     }
 
-    walk() {
+    walk(playerX, playerY) {
         this.still = false
+        return this.setNextPosition(playerX, playerY)
     }
 
     stand() {
         this.still = true
-        this.x = this.nextX // TODO: consider changing once player location is refreshed
-        this.y = this.nextY
+        this.updateCurrentPosition()
+        this.resetNextPosition()
+    }
+
+    updateCurrentPosition() {
+        if (this.nextX == undefined || this.nextY == undefined) return;
+
+        this.x = this.nextX;
+        this.y = this.nextY;
     }
 
     setNextPosition(playerX, playerY) {
@@ -95,7 +103,7 @@ export class Trainer extends GameObject {
         return totalDistance
     }
 
-    resetPosition() {
+    resetNextPosition() {
         this.nextX = undefined
         this.nextY = undefined
     }
